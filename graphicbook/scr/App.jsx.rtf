@@ -1,0 +1,801 @@
+{\rtf1\ansi\ansicpg949\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 HelveticaNeue;}
+{\colortbl;\red255\green255\blue255;\red220\green220\blue220;\red30\green31\blue33;}
+{\*\expandedcolortbl;;\cssrgb\c89020\c89020\c89020;\cssrgb\c15686\c16471\c17255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs32 \AppleTypeServices\AppleTypeServicesF65539 \cf2 \cb3 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 import React, \{ useState, useEffect, useMemo \} from 'react';\
+import \{ initializeApp \} from 'firebase/app';\
+import \{\'a0\
+\'a0 getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,\'a0\
+\'a0 onSnapshot, query, orderBy, serverTimestamp, setDoc, getDocs, where\'a0\
+\} from 'firebase/firestore';\
+import \{\'a0\
+\'a0 getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken\'a0\
+\} from 'firebase/auth';\
+import \{\'a0\
+\'a0 Search, Map, BookOpen, Plus, ShoppingCart,\'a0\
+\'a0 ArrowRight, User, Star, MoreHorizontal, Move,\'a0\
+\'a0 Package, LayoutGrid, Tag, LogOut, CheckCircle, XCircle,\
+\'a0 Inbox, Database, Trash2, Edit2, Save\
+\} from 'lucide-react';\
+\
+// --- Firebase Configuration ---\
+const firebaseConfig = JSON.parse(__firebase_config);\
+const app = initializeApp(firebaseConfig);\
+const auth = getAuth(app);\
+const db = getFirestore(app);\
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';\
+\
+// --- Components ---\
+\
+// 1. Navbar\
+const Navbar = (\{ activeTab, setActiveTab, userMode, setUserMode \}) => (\
+\'a0 <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm h-16">\
+\'a0 \'a0 <div className="flex items-center gap-2 cursor-pointer" onClick=\{() => setActiveTab('home')\}>\
+\'a0 \'a0 \'a0 <div className="bg-black text-white p-1.5 rounded-md font-bold text-xl font-serif">P</div>\
+\'a0 \'a0 \'a0 <span className="font-serif text-xl font-bold tracking-tight hidden md:block">Paperr.lib</span>\
+\'a0 \'a0 </div>\
+\'a0 \'a0\'a0\
+\'a0 \'a0 <div className="flex gap-2 md:gap-6 text-sm font-medium overflow-x-auto no-scrollbar">\
+\'a0 \'a0 \'a0 \{userMode === 'customer' ? (\
+\'a0 \'a0 \'a0 \'a0 <>\
+\'a0 \'a0 \'a0 \'a0 \'a0 <button onClick=\{() => setActiveTab('home')\} className=\{`$\{activeTab === 'home' ? 'text-black font-bold' : 'text-gray-400'\} whitespace-nowrap transition-colors`\}>\uc0\u54856 </button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 <button onClick=\{() => setActiveTab('search')\} className=\{`$\{activeTab === 'search' ? 'text-black font-bold' : 'text-gray-400'\} whitespace-nowrap transition-colors`\}>\uc0\u44160 \u49353 </button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 <button onClick=\{() => setActiveTab('curation')\} className=\{`$\{activeTab === 'curation' ? 'text-black font-bold' : 'text-gray-400'\} whitespace-nowrap transition-colors`\}>\uc0\u53328 \u47112 \u51060 \u49496 </button>\
+\'a0 \'a0 \'a0 \'a0 </>\
+\'a0 \'a0 \'a0 ) : (\
+\'a0 \'a0 \'a0 \'a0 <>\
+\'a0 \'a0 \'a0 \'a0 \'a0 <button onClick=\{() => setActiveTab('admin-map')\} className=\{`$\{activeTab === 'admin-map' ? 'text-blue-600 font-bold' : 'text-gray-400'\} whitespace-nowrap transition-colors flex items-center gap-1`\}><Map size=\{14\}/>\uc0\u49436 \u44032 \u44288 \u47532 </button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 <button onClick=\{() => setActiveTab('admin-inventory')\} className=\{`$\{activeTab === 'admin-inventory' ? 'text-blue-600 font-bold' : 'text-gray-400'\} whitespace-nowrap transition-colors flex items-center gap-1`\}><Package size=\{14\}/>\uc0\u51077 \u52636 \u44256 </button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 <button onClick=\{() => setActiveTab('admin-database')\} className=\{`$\{activeTab === 'admin-database' ? 'text-blue-600 font-bold' : 'text-gray-400'\} whitespace-nowrap transition-colors flex items-center gap-1`\}><Database size=\{14\}/>\uc0\u46020 \u49436 \u45824 \u51109 </button>\
+\'a0 \'a0 \'a0 \'a0 </>\
+\'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 </div>\
+\
+\'a0 \'a0 <button\'a0\
+\'a0 \'a0 \'a0 onClick=\{() => \{\
+\'a0 \'a0 \'a0 \'a0 const newMode = userMode === 'customer' ? 'admin' : 'customer';\
+\'a0 \'a0 \'a0 \'a0 setUserMode(newMode);\
+\'a0 \'a0 \'a0 \'a0 setActiveTab(newMode === 'customer' ? 'home' : 'admin-map');\
+\'a0 \'a0 \'a0 \}\}\
+\'a0 \'a0 \'a0 className=\{`px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap $\{userMode === 'customer' ? 'bg-gray-100 text-gray-500 hover:bg-gray-200' : 'bg-blue-600 text-white shadow-md'\}`\}\
+\'a0 \'a0 >\
+\'a0 \'a0 \'a0 \{userMode === 'customer' ? '\uc0\u51649 \u50896 \u50857  \u51204 \u54872 ' : '\u44256 \u44061 \u50857  \u51204 \u54872 '\}\
+\'a0 \'a0 </button>\
+\'a0 </nav>\
+);\
+\
+// 2. Book Card (Customer View)\
+const BookCard = (\{ book, onClick \}) => (\
+\'a0 <div onClick=\{() => onClick(book)\} className="group cursor-pointer flex flex-col gap-2">\
+\'a0 \'a0 <div className="aspect-[2/3] w-full bg-gray-100 rounded-lg overflow-hidden relative shadow-sm transition-all group-hover:shadow-md border border-gray-100">\
+\'a0 \'a0 \'a0 \{book.coverUrl ? (\
+\'a0 \'a0 \'a0 \'a0 <img src=\{book.coverUrl\} alt=\{book.title\} className="w-full h-full object-cover" />\
+\'a0 \'a0 \'a0 ) : (\
+\'a0 \'a0 \'a0 \'a0 <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300">\
+\'a0 \'a0 \'a0 \'a0 \'a0 <BookOpen size=\{32\} />\
+\'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \{book.isNew && (\
+\'a0 \'a0 \'a0 \'a0 <span className="absolute top-2 left-2 bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">\
+\'a0 \'a0 \'a0 \'a0 \'a0 NEW\
+\'a0 \'a0 \'a0 \'a0 </span>\
+\'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] px-2 py-1 rounded backdrop-blur-md shadow-sm">\
+\'a0 \'a0 \'a0 \'a0 \{book.location ? `$\{book.location.section\}-$\{book.location.row\}-$\{book.location.col\}` : '\uc0\u50948 \u52824 \u48120 \u51221 '\}\
+\'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 </div>\
+\'a0 \'a0 <div>\
+\'a0 \'a0 \'a0 <h3 className="font-bold text-gray-900 leading-tight line-clamp-1 text-sm">\{book.title\}</h3>\
+\'a0 \'a0 \'a0 <p className="text-xs text-gray-500 line-clamp-1">\{book.author\}</p>\
+\'a0 \'a0 </div>\
+\'a0 </div>\
+);\
+\
+// 3. Book Detail Modal\
+const BookDetail = (\{ book, onClose, onAddComment, comments \}) => \{\
+\'a0 const [commentText, setCommentText] = useState('');\
+\'a0\'a0\
+\'a0 if (!book) return null;\
+\
+\'a0 return (\
+\'a0 \'a0 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">\
+\'a0 \'a0 \'a0 <div className="bg-white w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">\
+\'a0 \'a0 \'a0 \'a0 \{/* Header */\}\
+\'a0 \'a0 \'a0 \'a0 <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0">\
+\'a0 \'a0 \'a0 \'a0 \'a0 <h2 className="font-bold text-lg truncate pr-4">\uc0\u46020 \u49436  \u49345 \u49464  \u51221 \u48372 </h2>\
+\'a0 \'a0 \'a0 \'a0 \'a0 <button onClick=\{onClose\} className="p-2 hover:bg-gray-100 rounded-full"><XCircle size=\{20\} className="text-gray-400"/></button>\
+\'a0 \'a0 \'a0 \'a0 </div>\
+\
+\'a0 \'a0 \'a0 \'a0 <div className="overflow-y-auto p-0 pb-6 flex-1">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \{/* Book Info */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="p-6 flex gap-6">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="w-1/3 aspect-[2/3] bg-gray-100 rounded-lg shadow-md overflow-hidden shrink-0">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0\{book.coverUrl ? <img src=\{book.coverUrl\} alt="" className="w-full h-full object-cover"/> : null\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex-1 space-y-3">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <span className="text-xs font-bold text-blue-600 mb-1 block">\{book.category || '\uc0\u51068 \u48152 '\}</span>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <h1 className="text-xl font-bold leading-tight mb-1">\{book.title\}</h1>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-sm text-gray-500">\{book.author\}</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-100">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <Map size=\{18\} className="text-gray-400"/>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-xs text-gray-400 font-bold uppercase">\uc0\u49436 \u44032  \u50948 \u52824 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-sm font-bold text-gray-900">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{book.location ?\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 `Section $\{book.location.section\} / \uc0\u54665  $\{book.location.row\} / \u50676  $\{book.location.col\}`\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 : '\uc0\u51077 \u44256  \u45824 \u44592 \u51473 '\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-sm text-gray-600 leading-relaxed line-clamp-4">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{book.description || '\uc0\u52293  \u49548 \u44060 \u44544 \u51060  \u50630 \u49845 \u45768 \u45796 .'\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\
+\'a0 \'a0 \'a0 \'a0 \'a0 \{/* Comments Section */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="px-6 mt-4">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \uc0\u46021 \u51088  \u54620 \u47560 \u46356  <span className="text-gray-400 text-sm font-normal">\{comments?.length || 0\}</span>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </h3>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="space-y-4 mb-6">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{comments && comments.length > 0 ? (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 comments.map((c) => (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div key=\{c.id\} className="bg-gray-50 p-3 rounded-lg text-sm">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex justify-between items-center mb-1">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <span className="font-bold text-gray-700">\uc0\u51061 \u47749 \u51032  \u46021 \u51088 </span>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <span className="text-xs text-gray-400">\{c.createdAt ? new Date(c.createdAt.seconds * 1000).toLocaleDateString() : '\uc0\u48169 \u44552  \u51204 '\}</span>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-gray-600">\{c.text\}</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ))\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ) : (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-center text-gray-400 py-4 text-sm">\uc0\u52395  \u48264 \u51704  \u53076 \u47704 \u53944 \u47484  \u45224 \u44200 \u48372 \u49464 \u50836 !</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex gap-2">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <input\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 value=\{commentText\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onChange=\{(e) => setCommentText(e.target.value)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 placeholder="\uc0\u51060  \u52293 \u51008  \u50612 \u46432 \u45208 \u50836 ?"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className="flex-1 bg-gray-50 border-none rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-black"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onKeyDown=\{(e) => \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 if (e.key === 'Enter' && commentText.trim()) \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onAddComment(book.id, commentText);\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 setCommentText('');\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 />\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <button\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onClick=\{() => \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 if (commentText.trim()) \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onAddComment(book.id, commentText);\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 setCommentText('');\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \}\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className="bg-black text-white px-4 py-2 rounded-lg text-sm font-bold shrink-0"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \uc0\u46321 \u47197 \
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 </div>\
+\'a0 );\
+\};\
+\
+// 4. Admin Map Component (Draggable)\
+const AdminMap = (\{ books, onMoveBook \}) => \{\
+\'a0 const [activeSection, setActiveSection] = useState('A');\
+\'a0 const sections = ['A', 'B', 'C'];\
+\'a0 const rows = 5;\
+\'a0 const cols = 8;\
+\
+\'a0 // Drag state\
+\'a0 const [draggedBook, setDraggedBook] = useState(null);\
+\
+\'a0 const getCellBook = (r, c) => \{\
+\'a0 \'a0 return books.find(b => b.location?.section === activeSection && b.location?.row === r && b.location?.col === c);\
+\'a0 \};\
+\'a0\'a0\
+\'a0 const getUnplacedBooks = () => \{\
+\'a0 \'a0 return books.filter(b => !b.location);\
+\'a0 \};\
+\
+\'a0 const handleDrop = (r, c, e) => \{\
+\'a0 \'a0 e.preventDefault();\
+\'a0 \'a0 if (!draggedBook) return;\
+\'a0 \'a0 const targetBook = getCellBook(r, c);\
+\'a0 \'a0 onMoveBook(draggedBook.id, \{ section: activeSection, row: r, col: c \}, targetBook);\
+\'a0 \'a0 setDraggedBook(null);\
+\'a0 \};\
+\
+\'a0 return (\
+\'a0 \'a0 <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden bg-gray-50">\
+\'a0 \'a0 \'a0 \{/* Sidebar: Unplaced Books */\}\
+\'a0 \'a0 \'a0 <div className="w-full lg:w-64 bg-white border-r border-gray-200 p-4 flex flex-col h-1/3 lg:h-full overflow-hidden">\
+\'a0 \'a0 \'a0 \'a0 <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2">\
+\'a0 \'a0 \'a0 \'a0 \'a0 <Inbox size=\{18\}/> \uc0\u51652 \u50676  \u45824 \u44592  \u51473  (\{getUnplacedBooks().length\})\
+\'a0 \'a0 \'a0 \'a0 </h3>\
+\'a0 \'a0 \'a0 \'a0 <p className="text-xs text-gray-500 mb-4">\uc0\u51077 \u44256 \u46104 \u50632 \u51004 \u45208  \u50948 \u52824 \u44032  \u50630 \u45716  \u46020 \u49436 \u51077 \u45768 \u45796 . \u46300 \u47000 \u44536 \u54616 \u50668  \u48176 \u52824 \u54616 \u49464 \u50836 .</p>\
+\'a0 \'a0 \'a0 \'a0\'a0\
+\'a0 \'a0 \'a0 \'a0 <div className="flex-1 overflow-y-auto space-y-2 pr-1">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \{getUnplacedBooks().map(book => (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 key=\{book.id\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 draggable\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onDragStart=\{() => setDraggedBook(book)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className="bg-white border border-gray-200 p-3 rounded-lg shadow-sm cursor-move hover:border-blue-500 hover:shadow-md transition-all flex gap-3 items-center group"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="w-10 h-14 bg-gray-100 rounded shrink-0 overflow-hidden">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{book.coverUrl && <img src=\{book.coverUrl\} className="w-full h-full object-cover"/>\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="min-w-0">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-sm font-bold truncate group-hover:text-blue-600">\{book.title\}</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-xs text-gray-500">\{book.author\}</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 ))\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \{getUnplacedBooks().length === 0 && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="text-center py-10 text-gray-300 text-sm">\uc0\u45824 \u44592  \u51473 \u51064  \u46020 \u49436 \u44032  \u50630 \u49845 \u45768 \u45796 .</div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 </div>\
+\
+\'a0 \'a0 \'a0 \{/* Main Map Area */\}\
+\'a0 \'a0 \'a0 <div className="flex-1 p-4 md:p-6 overflow-auto">\
+\'a0 \'a0 \'a0 \'a0 <div className="mb-6 flex items-center justify-between">\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <h2 className="text-xl font-bold text-gray-900">\uc0\u46020 \u49436  \u50948 \u52824  \u44288 \u47532  \u49884 \u49828 \u53596 </h2>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-sm text-gray-500 hidden md:block">\uc0\u52293 \u51012  \u46300 \u47000 \u44536 \u54616 \u50668  \u50948 \u52824 \u47484  \u51060 \u46041 \u54616 \u49464 \u50836 .</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex bg-white rounded-lg p-1 shadow-sm border border-gray-200">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{sections.map(s => (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <button\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 key=\{s\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onClick=\{() => setActiveSection(s)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className=\{`px-4 py-2 rounded-md text-sm font-bold transition-all $\{activeSection === s ? 'bg-black text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100'\}`\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 Section \{s\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ))\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 </div>\
+\
+\'a0 \'a0 \'a0 \'a0 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 overflow-x-auto">\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="inline-grid gap-3" style=\{\{ gridTemplateColumns: `repeat($\{cols\}, minmax(80px, 1fr))` \}\}>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{Array.from(\{ length: rows \}).map((_, rIndex) => (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <React.Fragment key=\{rIndex\}>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{Array.from(\{ length: cols \}).map((_, cIndex) => \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 const book = getCellBook(rIndex + 1, cIndex + 1);\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 return (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 key=\{`$\{rIndex\}-$\{cIndex\}`\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onDragOver=\{(e) => e.preventDefault()\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onDrop=\{(e) => handleDrop(rIndex + 1, cIndex + 1, e)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className=\{`\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 aspect-[3/4] rounded-lg border-2 border-dashed transition-all relative group\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 $\{book ? 'border-transparent bg-white shadow-sm hover:shadow-md' : 'border-gray-200 bg-gray-50 hover:bg-gray-100'\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 `\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{book ? (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 draggable\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onDragStart=\{() => setDraggedBook(book)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className="w-full h-full cursor-grab active:cursor-grabbing p-1 relative"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<img\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 src=\{book.coverUrl || "/api/placeholder/100/150"\}\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className="w-full h-full object-cover rounded shadow-sm pointer-events-none"\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 alt="book"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 />\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors rounded"/>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="absolute bottom-1 left-1 right-1 bg-white/90 text-[8px] p-1 rounded text-center truncate font-bold shadow-sm">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{book.title\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ) : (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <span className="text-[10px] font-mono">\{rIndex+1\}-\{cIndex+1\}</span>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 );\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \})\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </React.Fragment>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ))\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \{/* Floor Label */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="mt-4 text-center border-t-2 border-gray-200 pt-2">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <span className="text-gray-400 font-bold uppercase tracking-widest text-xs">Section \{activeSection\} Floor</span>\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 </div>\
+\'a0 );\
+\};\
+\
+// 5. Admin Inventory Component\
+const AdminInventory = (\{ orders, onOrder, onReceive, onStockOut \}) => \{\
+\'a0 const [view, setView] = useState('order'); // 'order', 'list', 'out'\
+\'a0 const [form, setForm] = useState(\{ title: '', isbn: '', quantity: 1, price: 0, purpose: '\uc0\u51068 \u48152 \u44396 \u47588 ', source: '\u44368 \u48372 \u47928 \u44256 ' \});\
+\
+\'a0 const handleSubmitOrder = () => \{\
+\'a0 \'a0 if (!form.title || !form.isbn) return;\
+\'a0 \'a0 onOrder(\{ ...form, date: new Date().toISOString(), status: 'pending' \});\
+\'a0 \'a0 setForm(\{ title: '', isbn: '', quantity: 1, price: 0, purpose: '\uc0\u51068 \u48152 \u44396 \u47588 ', source: '\u44368 \u48372 \u47928 \u44256 ' \});\
+\'a0 \'a0 alert('\uc0\u48156 \u51452 \u44032  \u46321 \u47197 \u46104 \u50632 \u49845 \u45768 \u45796 .');\
+\'a0 \};\
+\
+\'a0 const handleStockOut = (isbn, qty) => \{\
+\'a0 \'a0 onStockOut(isbn, qty);\
+\'a0 \'a0 alert('\uc0\u52636 \u44256  \u52376 \u47532  \u46104 \u50632 \u49845 \u45768 \u45796 .');\
+\'a0 \};\
+\
+\'a0 return (\
+\'a0 \'a0 <div className="p-6 max-w-4xl mx-auto">\
+\'a0 \'a0 \'a0 <div className="flex gap-4 mb-8 border-b border-gray-200 pb-1">\
+\'a0 \'a0 \'a0 \'a0 <button onClick=\{() => setView('order')\} className=\{`pb-3 text-sm font-bold $\{view === 'order' ? 'text-black border-b-2 border-black' : 'text-gray-400'\}`\}>\uc0\u46020 \u49436  \u48156 \u51452 </button>\
+\'a0 \'a0 \'a0 \'a0 <button onClick=\{() => setView('list')\} className=\{`pb-3 text-sm font-bold $\{view === 'list' ? 'text-black border-b-2 border-black' : 'text-gray-400'\}`\}>\uc0\u51077 \u44256  \u45824 \u44592  (\{orders.filter(o => o.status === 'pending').length\})</button>\
+\'a0 \'a0 \'a0 \'a0 <button onClick=\{() => setView('out')\} className=\{`pb-3 text-sm font-bold $\{view === 'out' ? 'text-black border-b-2 border-black' : 'text-gray-400'\}`\}>\uc0\u52636 \u44256  \u44288 \u47532 </button>\
+\'a0 \'a0 \'a0 </div>\
+\
+\'a0 \'a0 \'a0 \{view === 'order' && (\
+\'a0 \'a0 \'a0 \'a0 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm animate-fade-in">\
+\'a0 \'a0 \'a0 \'a0 \'a0 <h3 className="font-bold text-lg mb-4">\uc0\u49888 \u44508  \u46020 \u49436  \u48156 \u51452  \u46321 \u47197 </h3>\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <input className="input-field" placeholder="\uc0\u46020 \u49436 \u47749 " value=\{form.title\} onChange=\{e => setForm(\{...form, title: e.target.value\})\} />\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <input className="input-field" placeholder="ISBN" value=\{form.isbn\} onChange=\{e => setForm(\{...form, isbn: e.target.value\})\} />\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <input\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className="input-field"\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 type="number"\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 placeholder="\uc0\u49688 \u47049 "\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 value=\{form.quantity\}\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onChange=\{e => setForm(\{...form, quantity: e.target.value === '' ? '' : parseInt(e.target.value)\})\}\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 />\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <input\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className="input-field"\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 type="number"\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 placeholder="\uc0\u44552 \u50529  (\u50896 )"\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 value=\{form.price\}\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onChange=\{e => setForm(\{...form, price: e.target.value === '' ? '' : parseInt(e.target.value)\})\}\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 />\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <input className="input-field" placeholder="\uc0\u44396 \u47588 \u52376 " value=\{form.source\} onChange=\{e => setForm(\{...form, source: e.target.value\})\} />\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <select className="input-field" value=\{form.purpose\} onChange=\{e => setForm(\{...form, purpose: e.target.value\})\}>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <option>\uc0\u51068 \u48152 \u44396 \u47588 </option>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <option>\uc0\u44256 \u44061 \u50836 \u52397 </option>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <option>\uc0\u54028 \u49552 \u44368 \u52404 </option>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </select>\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 <button onClick=\{handleSubmitOrder\} className="mt-6 w-full bg-black text-white font-bold py-3 rounded-lg hover:bg-gray-800 transition-colors">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \uc0\u48156 \u51452  \u46321 \u47197 \u54616 \u44592 \
+\'a0 \'a0 \'a0 \'a0 \'a0 </button>\
+\'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 )\}\
+\
+\'a0 \'a0 \'a0 \{view === 'list' && (\
+\'a0 \'a0 \'a0 \'a0 <div className="space-y-3 animate-fade-in">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \{orders.filter(o => o.status === 'pending').map(order => (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div key=\{order.id\} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm flex justify-between items-center">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <h4 className="font-bold">\{order.title\}</h4>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-xs text-gray-500">ISBN: \{order.isbn\} | \uc0\u49688 \u47049 : \{order.quantity\}\u44428  | \{order.source\}</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <button\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onClick=\{() => onReceive(order)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className="bg-blue-600 text-white text-xs px-3 py-2 rounded-md font-bold hover:bg-blue-700 flex items-center gap-1"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <CheckCircle size=\{14\}/> \uc0\u51077 \u44256 \u54869 \u51064 \
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 ))\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \{orders.filter(o => o.status === 'pending').length === 0 && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-center text-gray-400 py-10">\uc0\u45824 \u44592 \u51473 \u51064  \u48156 \u51452  \u45236 \u50669 \u51060  \u50630 \u49845 \u45768 \u45796 .</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 )\}\
+\
+\'a0 \'a0 \'a0 \{view === 'out' && (\
+\'a0 \'a0 \'a0 \'a0 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm animate-fade-in">\
+\'a0 \'a0 \'a0 \'a0 \'a0 <h3 className="font-bold text-lg mb-4 text-red-600">\uc0\u46020 \u49436  \u52636 \u44256 (\u54224 \u44592 /\u54032 \u47588 ) \u52376 \u47532 </h3>\
+\'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-sm text-gray-500 mb-4">\uc0\u52636 \u44256  \u52376 \u47532  \u49884  \u51204 \u52404  \u46020 \u49436  \u47532 \u49828 \u53944 \u50640 \u49436  \u51593 \u49884  \u49688 \u47049 \u51060  \u52264 \u44048 \u46104 \u44144 \u45208  \u49325 \u51228 \u46121 \u45768 \u45796 .</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex gap-2">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <input id="out-isbn" className="input-field flex-1" placeholder="\uc0\u52636 \u44256 \u54624  \u46020 \u49436  ISBN \u51077 \u47141 " />\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <button\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onClick=\{() => handleStockOut(document.getElementById('out-isbn').value, 1)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className="bg-red-50 text-red-600 font-bold px-4 rounded-lg border border-red-100 hover:bg-red-100"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 >\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \uc0\u52636 \u44256 \u52376 \u47532 \
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 </div>\
+\'a0 );\
+\};\
+\
+// 6. NEW: Admin Database (Table View)\
+const AdminDatabase = (\{ books, onUpdateBook, onDeleteBook \}) => \{\
+\'a0 const [editingId, setEditingId] = useState(null);\
+\'a0 const [editForm, setEditForm] = useState(\{\});\
+\
+\'a0 const startEdit = (book) => \{\
+\'a0 \'a0 setEditingId(book.id);\
+\'a0 \'a0 setEditForm(\{ ...book \});\
+\'a0 \};\
+\
+\'a0 const saveEdit = async () => \{\
+\'a0 \'a0 await onUpdateBook(editingId, editForm);\
+\'a0 \'a0 setEditingId(null);\
+\'a0 \};\
+\
+\'a0 return (\
+\'a0 \'a0 <div className="p-4 md:p-8 animate-fade-in">\
+\'a0 \'a0 \'a0 \'a0<div className="flex items-center justify-between mb-6">\
+\'a0 \'a0 \'a0 \'a0 <div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 <h2 className="text-xl font-bold">\uc0\u51204 \u52404  \u46020 \u49436  \u45824 \u51109  (DB \u44288 \u47532 )</h2>\
+\'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-sm text-gray-500">\uc0\u45936 \u51060 \u53552 \u48288 \u51060 \u49828 \u51032  \u47784 \u46304  \u46020 \u49436 \u47484  \u50641 \u49472 \u52376 \u47100  \u44288 \u47532 \u54616 \u49464 \u50836 .</p>\
+\'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 <div className="text-xs text-gray-400 font-mono bg-gray-100 px-3 py-1 rounded">\
+\'a0 \'a0 \'a0 \'a0 \'a0 Total Records: \{books.length\}\
+\'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0</div>\
+\
+\'a0 \'a0 \'a0 \'a0<div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-x-auto">\
+\'a0 \'a0 \'a0 \'a0 \'a0<table className="w-full text-sm text-left">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0<thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<tr>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<th className="px-6 py-3">\uc0\u46020 \u49436 \u47749 </th>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<th className="px-6 py-3">ISBN</th>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<th className="px-6 py-3">\uc0\u51200 \u51088 </th>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<th className="px-6 py-3">\uc0\u52852 \u53580 \u44256 \u47532 </th>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<th className="px-6 py-3">\uc0\u50948 \u52824 </th>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<th className="px-6 py-3 text-right">\uc0\u44288 \u47532 </th>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0</tr>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0</thead>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0<tbody className="divide-y divide-gray-100">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0\{books.map(book => (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<tr key=\{book.id\} className="hover:bg-gray-50">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0\{editingId === book.id ? (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<td className="px-6 py-3"><input className="border rounded px-2 py-1 w-full" value=\{editForm.title\} onChange=\{e => setEditForm(\{...editForm, title: e.target.value\})\} /></td>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<td className="px-6 py-3"><input className="border rounded px-2 py-1 w-24" value=\{editForm.isbn\} onChange=\{e => setEditForm(\{...editForm, isbn: e.target.value\})\} /></td>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<td className="px-6 py-3"><input className="border rounded px-2 py-1 w-full" value=\{editForm.author\} onChange=\{e => setEditForm(\{...editForm, author: e.target.value\})\} /></td>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<td className="px-6 py-3"><input className="border rounded px-2 py-1 w-24" value=\{editForm.category\} onChange=\{e => setEditForm(\{...editForm, category: e.target.value\})\} /></td>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<td className="px-6 py-3 text-gray-400 italic">\uc0\u50948 \u52824 \u45716  \u51648 \u46020 \u50640 \u49436  \u49688 \u51221 </td>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<td className="px-6 py-3 text-right">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<button onClick=\{saveEdit\} className="text-green-600 hover:text-green-800 mr-2"><Save size=\{16\}/></button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<button onClick=\{() => setEditingId(null)\} className="text-gray-400 hover:text-gray-600"><XCircle size=\{16\}/></button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0</td>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0</>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0) : (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<td className="px-6 py-3 font-medium text-gray-900">\{book.title\} \{book.isNew && <span className="text-[10px] bg-yellow-100 text-yellow-800 px-1 rounded ml-1">NEW</span>\}</td>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<td className="px-6 py-3 font-mono text-gray-500">\{book.isbn\}</td>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<td className="px-6 py-3 text-gray-500">\{book.author\}</td>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<td className="px-6 py-3"><span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs">\{book.category || '\uc0\u48120 \u48516 \u47448 '\}</span></td>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<td className="px-6 py-3 text-gray-500">\{book.location ? `$\{book.location.section\}-$\{book.location.row\}-$\{book.location.col\}` : <span className="text-red-400 text-xs">\uc0\u48120 \u48176 \u52824 </span>\}</td>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<td className="px-6 py-3 text-right flex justify-end gap-2">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<button onClick=\{() => startEdit(book)\} className="text-blue-600 hover:text-blue-800"><Edit2 size=\{16\}/></button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<button onClick=\{() => \{ if(window.confirm('\uc0\u51221 \u47568  \u49325 \u51228 \u54616 \u49884 \u44192 \u49845 \u45768 \u44620 ?')) onDeleteBook(book.id); \}\} className="text-red-400 hover:text-red-600"><Trash2 size=\{16\}/></button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0</td>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0</>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0</tr>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0))\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0</tbody>\
+\'a0 \'a0 \'a0 \'a0 \'a0</table>\
+\'a0 \'a0 \'a0 \'a0 \'a0\{books.length === 0 && <div className="p-8 text-center text-gray-400">\uc0\u45936 \u51060 \u53552 \u44032  \u50630 \u49845 \u45768 \u45796 .</div>\}\
+\'a0 \'a0 \'a0 \'a0</div>\
+\'a0 \'a0 </div>\
+\'a0 )\
+\}\
+\
+// --- Main Application Component ---\
+export default function LibraryApp() \{\
+\'a0 const [user, setUser] = useState(null);\
+\'a0 const [userMode, setUserMode] = useState('customer'); // 'customer' | 'admin'\
+\'a0 const [activeTab, setActiveTab] = useState('home'); // 'home', 'search', 'curation', 'admin-map', 'admin-inventory', 'admin-database'\
+\'a0\'a0\
+\'a0 // Data States\
+\'a0 const [books, setBooks] = useState([]);\
+\'a0 const [orders, setOrders] = useState([]);\
+\'a0 const [comments, setComments] = useState([]);\
+\'a0 const [selectedBook, setSelectedBook] = useState(null);\
+\'a0 const [searchTerm, setSearchTerm] = useState('');\
+\
+\'a0 // 1. Auth & Initial Load\
+\'a0 useEffect(() => \{\
+\'a0 \'a0 const initAuth = async () => \{\
+\'a0 \'a0 \'a0 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) \{\
+\'a0 \'a0 \'a0 \'a0 await signInWithCustomToken(auth, __initial_auth_token);\
+\'a0 \'a0 \'a0 \} else \{\
+\'a0 \'a0 \'a0 \'a0 await signInAnonymously(auth);\
+\'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \};\
+\'a0 \'a0 initAuth();\
+\'a0 \'a0 return onAuthStateChanged(auth, setUser);\
+\'a0 \}, []);\
+\
+\'a0 // 2. Data Fetching\
+\'a0 useEffect(() => \{\
+\'a0 \'a0 if (!user) return;\
+\'a0 \'a0 const userId = user.uid; // In a real app, public data might be in a shared collection.\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0// Following rules: using artifacts/public/data for shared data.\
+\'a0 \'a0\'a0\
+\'a0 \'a0 // Books Listener\
+\'a0 \'a0 const booksQ = collection(db, 'artifacts', appId, 'public', 'data', 'books');\
+\'a0 \'a0 const unsubBooks = onSnapshot(booksQ, (snapshot) => \{\
+\'a0 \'a0 \'a0 setBooks(snapshot.docs.map(d => (\{ id: d.id, ...d.data() \})));\
+\'a0 \'a0 \}, (err) => console.error("Books error", err));\
+\
+\'a0 \'a0 // Orders Listener (Admin)\
+\'a0 \'a0 const ordersQ = collection(db, 'artifacts', appId, 'public', 'data', 'orders');\
+\'a0 \'a0 const unsubOrders = onSnapshot(ordersQ, (snapshot) => \{\
+\'a0 \'a0 \'a0 setOrders(snapshot.docs.map(d => (\{ id: d.id, ...d.data() \})));\
+\'a0 \'a0 \}, (err) => console.error("Orders error", err));\
+\
+\'a0 \'a0 // Comments Listener\
+\'a0 \'a0 const commentsQ = query(collection(db, 'artifacts', appId, 'public', 'data', 'comments'), orderBy('createdAt', 'desc'));\
+\'a0 \'a0 const unsubComments = onSnapshot(commentsQ, (snapshot) => \{\
+\'a0 \'a0 \'a0 setComments(snapshot.docs.map(d => (\{ id: d.id, ...d.data() \})));\
+\'a0 \'a0 \}, (err) => console.error("Comments error", err));\
+\
+\'a0 \'a0 return () => \{ unsubBooks(); unsubOrders(); unsubComments(); \};\
+\'a0 \}, [user]);\
+\
+\'a0 // --- Actions ---\
+\
+\'a0 const handleMoveBook = async (bookId, newLoc, targetBook) => \{\
+\'a0 \'a0 if (!user) return;\
+\'a0 \'a0 const booksRef = collection(db, 'artifacts', appId, 'public', 'data', 'books');\
+\'a0 \'a0\'a0\
+\'a0 \'a0 // Update moved book\
+\'a0 \'a0 await updateDoc(doc(booksRef, bookId), \{ location: newLoc \});\
+\'a0 \'a0\'a0\
+\'a0 \'a0 // If targetBook exists, swap location (optional feature)\
+\'a0 \'a0 if (targetBook) \{\
+\'a0 \'a0 \'a0 \'a0 // Swap logic: find the dragged book's old location first?\'a0\
+\'a0 \'a0 \'a0 \'a0 // For simplicity in this demo, we'll just alert if occupied or simple swap\
+\'a0 \'a0 \'a0 \'a0 // Let's implement simple swap\
+\'a0 \'a0 \'a0 \'a0 const draggedBook = books.find(b => b.id === bookId);\
+\'a0 \'a0 \'a0 \'a0 if (draggedBook && draggedBook.location) \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0await updateDoc(doc(booksRef, targetBook.id), \{ location: draggedBook.location \});\
+\'a0 \'a0 \'a0 \'a0 \} else \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0// If dragged book had no location (new), just clear target book's location or move it to storage?\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0// Let's just make the target book location null (moved to storage)\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0await updateDoc(doc(booksRef, targetBook.id), \{ location: null \});\
+\'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \}\
+\'a0 \};\
+\
+\'a0 const handleOrderBook = async (orderData) => \{\
+\'a0 \'a0 if (!user) return;\
+\'a0 \'a0 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'orders'), orderData);\
+\'a0 \};\
+\
+\'a0 const handleReceiveBook = async (order) => \{\
+\'a0 \'a0 if (!user) return;\
+\'a0 \'a0 // 1. Add to Books\
+\'a0 \'a0 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'books'), \{\
+\'a0 \'a0 \'a0 title: order.title,\
+\'a0 \'a0 \'a0 isbn: order.isbn,\
+\'a0 \'a0 \'a0 author: 'Unknown', // In real app, fetch from API\
+\'a0 \'a0 \'a0 description: '\uc0\u49888 \u44508  \u51077 \u44256 \u46108  \u46020 \u49436 \u51077 \u45768 \u45796 .',\
+\'a0 \'a0 \'a0 isNew: true,\
+\'a0 \'a0 \'a0 category: '\uc0\u48120 \u48516 \u47448 ',\
+\'a0 \'a0 \'a0 coverUrl: `https://covers.openlibrary.org/b/isbn/$\{order.isbn\}-M.jpg`, // Auto fetch cover\
+\'a0 \'a0 \'a0 location: null, // Needs to be placed on map\
+\'a0 \'a0 \'a0 createdAt: serverTimestamp()\
+\'a0 \'a0 \});\
+\'a0 \'a0 // 2. Update Order Status\
+\'a0 \'a0 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'orders', order.id), \{ status: 'received' \});\
+\'a0 \};\
+\
+\'a0 const handleStockOut = async (isbn, qty) => \{\
+\'a0 \'a0 if (!user) return;\
+\'a0 \'a0 // Find book by ISBN\
+\'a0 \'a0 const target = books.find(b => b.isbn === isbn);\
+\'a0 \'a0 if (target) \{\
+\'a0 \'a0 \'a0 await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'books', target.id));\
+\'a0 \'a0 \} else \{\
+\'a0 \'a0 \'a0 alert('\uc0\u54644 \u45817  ISBN\u51032  \u46020 \u49436 \u47484  \u52286 \u51012  \u49688  \u50630 \u49845 \u45768 \u45796 .');\
+\'a0 \'a0 \}\
+\'a0 \};\
+\
+\'a0 const handleAddComment = async (bookId, text) => \{\
+\'a0 \'a0 if (!user) return;\
+\'a0 \'a0 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'comments'), \{\
+\'a0 \'a0 \'a0 bookId,\
+\'a0 \'a0 \'a0 text,\
+\'a0 \'a0 \'a0 createdAt: serverTimestamp(),\
+\'a0 \'a0 \'a0 userId: user.uid\
+\'a0 \'a0 \});\
+\'a0 \};\
+\
+\'a0 const handleUpdateBook = async (bookId, newData) => \{\
+\'a0 \'a0 if(!user) return;\
+\'a0 \'a0 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'books', bookId), newData);\
+\'a0 \};\
+\
+\'a0 const handleDeleteBook = async (bookId) => \{\
+\'a0 \'a0 if(!user) return;\
+\'a0 \'a0 await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'books', bookId));\
+\'a0 \}\
+\
+\'a0 // --- Views ---\
+\
+\'a0 const filteredBooks = useMemo(() => \{\
+\'a0 \'a0 if (!searchTerm) return books;\
+\'a0 \'a0 return books.filter(b => b.title.toLowerCase().includes(searchTerm.toLowerCase()));\
+\'a0 \}, [books, searchTerm]);\
+\
+\'a0 const newArrivals = useMemo(() => books.filter(b => b.isNew), [books]);\
+\'a0 const curatedBooks = useMemo(() => books.filter(b => ['\uc0\u49548 \u49444 ', '\u44284 \u54617 '].includes(b.category)), [books]);\
+\
+\'a0 return (\
+\'a0 \'a0 <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-blue-100">\
+\'a0 \'a0 \'a0 <Navbar activeTab=\{activeTab\} setActiveTab=\{setActiveTab\} userMode=\{userMode\} setUserMode=\{setUserMode\} />\
+\
+\'a0 \'a0 \'a0 <main className="max-w-screen-xl mx-auto min-h-[calc(100vh-60px)]">\
+\'a0 \'a0 \'a0 \'a0\'a0\
+\'a0 \'a0 \'a0 \'a0 \{/* Customer: Home */\}\
+\'a0 \'a0 \'a0 \'a0 \{activeTab === 'home' && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="p-4 md:p-8 space-y-12 animate-fade-in">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* Hero Section */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <section className="text-center py-12 bg-gray-50 rounded-3xl">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <h1 className="text-3xl md:text-5xl font-bold mb-4 font-serif">\uc0\u50724 \u45720 \u51032  \u48156 \u44204 , <br/>\u45817 \u49888 \u51032  \u49436 \u51116 </h1>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-gray-500 mb-8">\uc0\u52712 \u54693 \u50640  \u47582 \u45716  \u52293 \u51012  \u52286 \u50500 \u48372 \u44256  \u49436 \u44032  \u50948 \u52824 \u47484  \u54869 \u51064 \u54616 \u49464 \u50836 .</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <button onClick=\{() => setActiveTab('search')\} className="bg-black text-white px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \uc0\u46020 \u49436  \u44160 \u49353 \u54616 \u44592 \
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </button>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </section>\
+\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{/* New Arrivals */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <section>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex justify-between items-end mb-6">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <h2 className="text-2xl font-bold font-serif">\uc0\u50724 \u45720 \u51032  \u49888 \u44036 </h2>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <span className="text-xs text-gray-400 cursor-pointer hover:text-black">\uc0\u45908 \u48372 \u44592 </span>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-8">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{newArrivals.slice(0, 6).map(book => (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <BookCard key=\{book.id\} book=\{book\} onClick=\{setSelectedBook\} />\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ))\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{newArrivals.length === 0 && <p className="col-span-full text-center text-gray-400 py-10">\uc0\u49888 \u44036 \u51060  \u50630 \u49845 \u45768 \u45796 .</p>\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </section>\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 )\}\
+\
+\'a0 \'a0 \'a0 \'a0 \{/* Customer: Search */\}\
+\'a0 \'a0 \'a0 \'a0 \{activeTab === 'search' && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="p-4 md:p-8 animate-fade-in">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="relative max-w-2xl mx-auto mb-10">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size=\{20\}/>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <input\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 value=\{searchTerm\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onChange=\{(e) => setSearchTerm(e.target.value)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 placeholder="\uc0\u46020 \u49436 \u47749 , \u51200 \u51088 , ISBN \u44160 \u49353 ..."\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 className="w-full pl-12 pr-4 py-4 rounded-full bg-gray-100 border-none focus:ring-2 focus:ring-black transition-all text-lg"\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 autoFocus\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 />\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{filteredBooks.map(book => (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <BookCard key=\{book.id\} book=\{book\} onClick=\{setSelectedBook\} />\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 ))\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \{filteredBooks.length === 0 && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="text-center py-20">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-gray-400">\uc0\u44160 \u49353  \u44208 \u44284 \u44032  \u50630 \u49845 \u45768 \u45796 .</p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 )\}\
+\
+\'a0 \'a0 \'a0 \'a0 \{/* Customer: Curation */\}\
+\'a0 \'a0 \'a0 \'a0 \{activeTab === 'curation' && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 <div className="p-4 md:p-8 animate-fade-in">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <h2 className="text-3xl font-bold font-serif mb-2">\uc0\u49324 \u49436 \u51032  \u52628 \u52380 </h2>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <p className="text-gray-500 mb-8">\uc0\u51060 \u48264  \u45804 , \u45459 \u52824 \u47732  \u54980 \u54924 \u54624  \u51060 \u50556 \u44592 \u46308 </p>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="space-y-12">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="bg-amber-50 p-6 rounded-2xl">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <h3 className="font-bold text-amber-900 mb-4 flex items-center gap-2"><Star size=\{18\} fill="currentColor"/> \uc0\u46384 \u46907 \u54620  \u50948 \u47196 \u44032  \u54596 \u50836 \u54624  \u46412 </h3>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <div className="flex gap-4 overflow-x-auto pb-4">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0\{/* Mock Curation Items if empty */\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0\{curatedBooks.length > 0 ? curatedBooks.map(book => (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<div key=\{book.id\} className="w-32 shrink-0">\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<BookCard book=\{book\} onClick=\{setSelectedBook\} />\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0</div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0)) : (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0<div className="text-amber-800/50 text-sm">\uc0\u52628 \u52380  \u46020 \u49436  \u51456 \u48708 \u51473 \u51077 \u45768 \u45796 .</div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 \'a0 </div>\
+\'a0 \'a0 \'a0 \'a0 )\}\
+\
+\'a0 \'a0 \'a0 \'a0 \{/* Admin: Map */\}\
+\'a0 \'a0 \'a0 \'a0 \{activeTab === 'admin-map' && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 <AdminMap books=\{books\} onMoveBook=\{handleMoveBook\} />\
+\'a0 \'a0 \'a0 \'a0 )\}\
+\
+\'a0 \'a0 \'a0 \'a0 \{/* Admin: Inventory */\}\
+\'a0 \'a0 \'a0 \'a0 \{activeTab === 'admin-inventory' && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 <AdminInventory\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 orders=\{orders\}\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onOrder=\{handleOrderBook\}\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onReceive=\{handleReceiveBook\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onStockOut=\{handleStockOut\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 />\
+\'a0 \'a0 \'a0 \'a0 )\}\
+\
+\'a0 \'a0 \'a0 \'a0 \{/* Admin: Database (Table View) */\}\
+\'a0 \'a0 \'a0 \'a0 \{activeTab === 'admin-database' && (\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 <AdminDatabase\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 books=\{books\}\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onUpdateBook=\{handleUpdateBook\}\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 \'a0 onDeleteBook=\{handleDeleteBook\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 \'a0 />\
+\'a0 \'a0 \'a0 \'a0 )\}\
+\'a0 \'a0 \'a0 </main>\
+\
+\'a0 \'a0 \'a0 \{/* Detail Modal */\}\
+\'a0 \'a0 \'a0 \{selectedBook && (\
+\'a0 \'a0 \'a0 \'a0 <BookDetail\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 book=\{selectedBook\}\'a0\
+\'a0 \'a0 \'a0 \'a0 \'a0 comments=\{comments.filter(c => c.bookId === selectedBook.id)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 onClose=\{() => setSelectedBook(null)\}\
+\'a0 \'a0 \'a0 \'a0 \'a0 onAddComment=\{handleAddComment\}\
+\'a0 \'a0 \'a0 \'a0 />\
+\'a0 \'a0 \'a0 )\}\
+\
+\'a0 \'a0 \'a0 \{/* Global Styles for input fields */\}\
+\'a0 \'a0 \'a0 <style>\{`\
+\'a0 \'a0 \'a0 \'a0 .input-field \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 width: 100%;\
+\'a0 \'a0 \'a0 \'a0 \'a0 padding: 12px;\
+\'a0 \'a0 \'a0 \'a0 \'a0 border-radius: 8px;\
+\'a0 \'a0 \'a0 \'a0 \'a0 border: 1px solid #e5e7eb;\
+\'a0 \'a0 \'a0 \'a0 \'a0 font-size: 14px;\
+\'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \'a0 .input-field:focus \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 outline: none;\
+\'a0 \'a0 \'a0 \'a0 \'a0 border-color: black;\
+\'a0 \'a0 \'a0 \'a0 \'a0 ring: 1px solid black;\
+\'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \'a0 @keyframes fade-in \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 from \{ opacity: 0; transform: translateY(10px); \}\
+\'a0 \'a0 \'a0 \'a0 \'a0 to \{ opacity: 1; transform: translateY(0); \}\
+\'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \'a0 .animate-fade-in \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 animation: fade-in 0.3s ease-out forwards;\
+\'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \'a0 .no-scrollbar::-webkit-scrollbar \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 display: none;\
+\'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 \'a0 .no-scrollbar \{\
+\'a0 \'a0 \'a0 \'a0 \'a0 -ms-overflow-style: none;\
+\'a0 \'a0 \'a0 \'a0 \'a0 scrollbar-width: none;\
+\'a0 \'a0 \'a0 \'a0 \}\
+\'a0 \'a0 \'a0 `\}</style>\
+\'a0 \'a0 </div>\
+\'a0 );\
+\}\
+}
