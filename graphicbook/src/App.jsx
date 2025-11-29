@@ -8,11 +8,11 @@ import {
   getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken 
 } from 'firebase/auth';
 import { 
-  Search, Map, BookOpen, ShoppingCart, 
-  ArrowRight, User, Star, MoreHorizontal, 
-  Package, CheckCircle, XCircle,
+  Search, Map, BookOpen, Plus, ShoppingCart, 
+  ArrowRight, User, Star, MoreHorizontal, Move, 
+  Package, LayoutGrid, Tag, LogOut, CheckCircle, XCircle,
   Inbox, Database, Trash2, Edit2, Save, Download, Upload, FileText,
-  AlertCircle, Sparkles, Loader2, AlertTriangle
+  AlertCircle, Sparkles, Loader2
 } from 'lucide-react';
 
 // --- Firebase Configuration (회원님 설정값 적용됨) ---
@@ -26,10 +26,10 @@ const firebaseConfig = {
   measurementId: "G-KVM210Y5HP"
 };
 
-// 앱 ID 설정 (데이터 분리용)
+// 앱 ID (데이터 분리용)
 const appId = 'graphicbook-v1';
 
-// Firebase 초기화 (안전 장치 추가)
+// Firebase 초기화 (안전 장치)
 let app, auth, db;
 try {
   app = initializeApp(firebaseConfig);
@@ -39,11 +39,10 @@ try {
   console.error("Firebase 초기화 실패:", e);
 }
 
-// --- Gemini API Helper (배포용 키 필요) ---
-// 주의: Vercel에 배포할 때는 API 키를 코드에 직접 넣거나 환경 변수로 설정해야 작동합니다.
-// 지금은 키가 없어도 앱이 죽지 않도록 예외처리했습니다.
+// --- Gemini API Helper ---
+// Vercel 환경 변수나 직접 키를 입력해야 작동합니다.
 const callGemini = async (prompt, systemInstruction = "") => {
-  const apiKey = ""; // 여기에 Gemini API 키를 넣으면 AI 기능이 작동합니다.
+  const apiKey = ""; // 여기에 Gemini API 키를 넣으세요 (선택사항)
   
   if (!apiKey) {
     alert("AI 기능을 사용하려면 코드에 Gemini API 키를 설정해야 합니다.");
@@ -91,26 +90,26 @@ const safeStr = (val) => {
 
 // 1. Navbar
 const Navbar = ({ activeTab, setActiveTab, userMode, setUserMode }) => (
-  <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm h-16">
-    <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('home')}>
-      <div className="bg-black text-white p-1.5 rounded-md font-bold text-xl font-serif">P</div>
-      <span className="font-serif text-xl font-bold tracking-tight hidden md:block">Paperr.lib</span>
+  <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm h-16 transition-all">
+    <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setActiveTab('home')}>
+      <div className="bg-black text-white p-1.5 rounded-lg font-bold text-xl font-serif shadow-md">P</div>
+      <span className="font-serif text-xl font-bold tracking-tight hidden md:block text-gray-900">Paperr.lib</span>
     </div>
     
-    <div className="flex gap-2 md:gap-6 text-sm font-medium overflow-x-auto no-scrollbar">
+    <div className="flex gap-1 md:gap-2 text-sm font-medium bg-gray-100/50 p-1 rounded-full overflow-hidden">
       {userMode === 'customer' ? (
         <>
-          <button onClick={() => setActiveTab('home')} className={`${activeTab === 'home' ? 'text-black font-bold' : 'text-gray-400'} whitespace-nowrap transition-colors`}>홈</button>
-          <button onClick={() => setActiveTab('search')} className={`${activeTab === 'search' ? 'text-black font-bold' : 'text-gray-400'} whitespace-nowrap transition-colors`}>검색</button>
-          <button onClick={() => setActiveTab('curation')} className={`${activeTab === 'curation' ? 'text-black font-bold' : 'text-gray-400'} whitespace-nowrap transition-colors flex items-center gap-1`}>
-            {activeTab === 'curation' && <Sparkles size={12} className="text-yellow-500 animate-pulse"/>} 큐레이션
+          <button onClick={() => setActiveTab('home')} className={`px-4 py-1.5 rounded-full transition-all ${activeTab === 'home' ? 'bg-white text-black shadow-sm font-bold' : 'text-gray-500 hover:text-gray-900'}`}>홈</button>
+          <button onClick={() => setActiveTab('search')} className={`px-4 py-1.5 rounded-full transition-all ${activeTab === 'search' ? 'bg-white text-black shadow-sm font-bold' : 'text-gray-500 hover:text-gray-900'}`}>검색</button>
+          <button onClick={() => setActiveTab('curation')} className={`px-4 py-1.5 rounded-full transition-all flex items-center gap-1 ${activeTab === 'curation' ? 'bg-white text-black shadow-sm font-bold' : 'text-gray-500 hover:text-gray-900'}`}>
+            <Sparkles size={14} className={activeTab === 'curation' ? "text-yellow-500" : ""}/> 큐레이션
           </button>
         </>
       ) : (
         <>
-          <button onClick={() => setActiveTab('admin-map')} className={`${activeTab === 'admin-map' ? 'text-blue-600 font-bold' : 'text-gray-400'} whitespace-nowrap transition-colors flex items-center gap-1`}><Map size={14}/>서가관리</button>
-          <button onClick={() => setActiveTab('admin-inventory')} className={`${activeTab === 'admin-inventory' ? 'text-blue-600 font-bold' : 'text-gray-400'} whitespace-nowrap transition-colors flex items-center gap-1`}><Package size={14}/>입출고</button>
-          <button onClick={() => setActiveTab('admin-database')} className={`${activeTab === 'admin-database' ? 'text-blue-600 font-bold' : 'text-gray-400'} whitespace-nowrap transition-colors flex items-center gap-1`}><Database size={14}/>도서대장</button>
+          <button onClick={() => setActiveTab('admin-map')} className={`px-4 py-1.5 rounded-full transition-all flex items-center gap-1 ${activeTab === 'admin-map' ? 'bg-white text-blue-600 shadow-sm font-bold' : 'text-gray-500 hover:text-gray-900'}`}><Map size={14}/>서가</button>
+          <button onClick={() => setActiveTab('admin-inventory')} className={`px-4 py-1.5 rounded-full transition-all flex items-center gap-1 ${activeTab === 'admin-inventory' ? 'bg-white text-blue-600 shadow-sm font-bold' : 'text-gray-500 hover:text-gray-900'}`}><Package size={14}/>재고</button>
+          <button onClick={() => setActiveTab('admin-database')} className={`px-4 py-1.5 rounded-full transition-all flex items-center gap-1 ${activeTab === 'admin-database' ? 'bg-white text-blue-600 shadow-sm font-bold' : 'text-gray-500 hover:text-gray-900'}`}><Database size={14}/>DB</button>
         </>
       )}
     </div>
@@ -121,39 +120,39 @@ const Navbar = ({ activeTab, setActiveTab, userMode, setUserMode }) => (
         setUserMode(newMode);
         setActiveTab(newMode === 'customer' ? 'home' : 'admin-map');
       }}
-      className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${userMode === 'customer' ? 'bg-gray-100 text-gray-500 hover:bg-gray-200' : 'bg-blue-600 text-white shadow-md'}`}
+      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${userMode === 'customer' ? 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50' : 'bg-blue-50 border-blue-200 text-blue-600'}`}
     >
-      {userMode === 'customer' ? '직원용 전환' : '고객용 전환'}
+      {userMode === 'customer' ? '관리자 모드' : '고객 모드'}
     </button>
   </nav>
 );
 
 // 2. Book Card
 const BookCard = ({ book, onClick, reason }) => (
-  <div onClick={() => onClick(book)} className="group cursor-pointer flex flex-col gap-2">
-    <div className="aspect-[2/3] w-full bg-gray-100 rounded-lg overflow-hidden relative shadow-sm transition-all group-hover:shadow-md border border-gray-100 bg-gray-50">
+  <div onClick={() => onClick(book)} className="group cursor-pointer flex flex-col gap-3 transition-transform hover:-translate-y-1 duration-300">
+    <div className="aspect-[2/3] w-full bg-gray-100 rounded-xl overflow-hidden relative shadow-sm group-hover:shadow-xl transition-all border border-gray-100">
       {book.coverUrl ? (
-        <img src={book.coverUrl} alt={book.title} className="w-full h-full object-cover" onError={(e) => e.target.style.display = 'none'} />
+        <img src={book.coverUrl} alt={book.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(e) => e.target.style.display = 'none'} />
       ) : null}
       <div className={`absolute inset-0 flex items-center justify-center bg-gray-50 text-gray-300 ${book.coverUrl ? 'hidden' : ''}`}>
           <BookOpen size={32} />
       </div>
       
       {book.isNew && (
-        <span className="absolute top-2 left-2 bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+        <span className="absolute top-2 left-2 bg-black text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-lg">
           NEW
         </span>
       )}
-      <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] px-2 py-1 rounded backdrop-blur-md shadow-sm">
+      <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur text-gray-900 text-[10px] px-2 py-1 rounded-md font-bold shadow-sm border border-gray-100">
         {book.locationStr || (book.location ? `${book.location.section}-${book.location.row}-${book.location.col}` : '위치미정')}
       </div>
     </div>
     <div>
-      <h3 className="font-bold text-gray-900 leading-tight line-clamp-1 text-sm">{book.title}</h3>
-      <p className="text-xs text-gray-500 line-clamp-1">{book.author}</p>
+      <h3 className="font-bold text-gray-900 leading-tight line-clamp-1 text-sm group-hover:text-blue-600 transition-colors">{book.title}</h3>
+      <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">{book.author}</p>
       {reason && (
-        <div className="mt-2 bg-blue-50 p-2 rounded text-[11px] text-blue-800 leading-snug flex gap-1 items-start">
-            <Sparkles size={10} className="shrink-0 mt-0.5 text-blue-500"/>
+        <div className="mt-2 bg-blue-50 p-2 rounded-lg text-[11px] text-blue-700 leading-snug flex gap-1.5 items-start">
+            <Sparkles size={12} className="shrink-0 mt-0.5 text-blue-500 fill-blue-500"/>
             {reason}
         </div>
       )}
@@ -168,33 +167,36 @@ const BookDetail = ({ book, onClose, onAddComment, comments }) => {
   if (!book) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+      <div className="bg-white w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0">
-          <h2 className="font-bold text-lg truncate pr-4">도서 상세 정보</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full"><XCircle size={20} className="text-gray-400"/></button>
+        <div className="p-4 px-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+          <h2 className="font-bold text-lg truncate pr-4 text-gray-900">도서 상세 정보</h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><XCircle size={24} className="text-gray-400 hover:text-gray-900"/></button>
         </div>
 
-        <div className="overflow-y-auto p-0 pb-6 flex-1">
-          {/* Book Info */}
-          <div className="p-6 flex gap-6">
-            <div className="w-1/3 aspect-[2/3] bg-gray-100 rounded-lg shadow-md overflow-hidden shrink-0">
-               {book.coverUrl ? <img src={book.coverUrl} alt="" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center"><BookOpen className="text-gray-300"/></div>}
+        <div className="overflow-y-auto p-0 pb-8 flex-1">
+          <div className="p-6 md:p-8 flex flex-col md:flex-row gap-8">
+            {/* Image Side */}
+            <div className="w-full md:w-1/3 shrink-0">
+               <div className="aspect-[2/3] bg-gray-100 rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                 {book.coverUrl ? <img src={book.coverUrl} alt="" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center"><BookOpen className="text-gray-300" size={48}/></div>}
+               </div>
             </div>
-            <div className="flex-1 space-y-3">
+
+            {/* Info Side */}
+            <div className="flex-1 space-y-5">
               <div>
-                <span className="text-xs font-bold text-blue-600 mb-1 block">{book.category || '일반'}</span>
-                <h1 className="text-xl font-bold leading-tight mb-1">{book.title}</h1>
-                <p className="text-sm text-gray-500">{book.author}</p>
-                <p className="text-xs text-gray-400">{book.publisher} | {book.isbn}</p>
+                <span className="inline-block bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded mb-2">{book.category || '미분류'}</span>
+                <h1 className="text-2xl md:text-3xl font-bold leading-tight mb-2 text-gray-900 font-serif">{book.title}</h1>
+                <p className="text-sm text-gray-600 font-medium">{book.author} <span className="text-gray-300 mx-2">|</span> {book.publisher}</p>
               </div>
               
-              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                <Map size={18} className="text-gray-400"/>
+              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="bg-white p-2 rounded-full shadow-sm text-blue-600"><Map size={20}/></div>
                 <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase">서가 위치</p>
-                  <p className="text-sm font-bold text-gray-900">
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-0.5">서가 위치</p>
+                  <p className="text-base font-bold text-gray-900">
                     {book.locationStr || (book.location ? 
                       `Section ${book.location.section} / 행 ${book.location.row} / 열 ${book.location.col}` 
                       : '입고 대기중')}
@@ -202,49 +204,53 @@ const BookDetail = ({ book, onClose, onAddComment, comments }) => {
                 </div>
               </div>
 
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                <p className="text-sm text-gray-600 leading-relaxed line-clamp-6">
-                    {book.oneLineReview || book.description || '책 소개글이 없습니다.'}
-                </p>
-                {book.tags && (
-                    <div className="mt-3 flex flex-wrap gap-1">
-                        {book.tags.split(',').map((tag, i) => (
-                            <span key={i} className="text-[10px] bg-white border border-gray-200 px-2 py-0.5 rounded-full text-gray-500">#{tag.trim()}</span>
-                        ))}
-                    </div>
-                )}
+              <div className="prose prose-sm text-gray-600 leading-relaxed">
+                <p>{book.oneLineReview || book.description || '이 책에 대한 소개글이 아직 없습니다.'}</p>
               </div>
+
+              {book.tags && (
+                  <div className="flex flex-wrap gap-2 pt-2">
+                      {book.tags.split(',').map((tag, i) => (
+                          <span key={i} className="text-xs bg-gray-100 border border-gray-200 px-3 py-1 rounded-full text-gray-600 hover:bg-gray-200 transition-colors cursor-default">#{tag.trim()}</span>
+                      ))}
+                  </div>
+              )}
             </div>
           </div>
 
+          <div className="border-t border-gray-100 my-4 mx-6 md:mx-8"></div>
+
           {/* Comments Section */}
-          <div className="px-6 mt-4">
-            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-              독자 한마디 <span className="text-gray-400 text-sm font-normal">{comments?.length || 0}</span>
+          <div className="px-6 md:px-8">
+            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 text-lg">
+              독자 한마디 <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-0.5 rounded-full">{comments?.length || 0}</span>
             </h3>
             
-            <div className="space-y-4 mb-6">
+            <div className="space-y-3 mb-6 bg-gray-50 p-4 rounded-xl max-h-48 overflow-y-auto custom-scrollbar">
               {comments && comments.length > 0 ? (
                 comments.map((c) => (
-                  <div key={c.id} className="bg-gray-50 p-3 rounded-lg text-sm">
+                  <div key={c.id} className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm text-sm">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="font-bold text-gray-700">익명의 독자</span>
-                      <span className="text-xs text-gray-400">{c.createdAt ? new Date(c.createdAt.seconds * 1000).toLocaleDateString() : '방금 전'}</span>
+                      <span className="font-bold text-gray-900 flex items-center gap-1"><User size={12}/> 익명의 독자</span>
+                      <span className="text-[10px] text-gray-400">{c.createdAt ? new Date(c.createdAt.seconds * 1000).toLocaleDateString() : '방금 전'}</span>
                     </div>
-                    <p className="text-gray-600">{c.text}</p>
+                    <p className="text-gray-600 pl-4 border-l-2 border-gray-200">{c.text}</p>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-400 py-4 text-sm">첫 번째 코멘트를 남겨보세요!</p>
+                <div className="text-center text-gray-400 py-8 text-sm flex flex-col items-center gap-2">
+                    <div className="bg-gray-200 p-2 rounded-full"><AlertCircle size={16} className="text-white"/></div>
+                    첫 번째 코멘트를 남겨보세요!
+                </div>
               )}
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 bg-white p-1 rounded-xl border border-gray-200 shadow-sm focus-within:ring-2 focus-within:ring-black transition-all">
               <input 
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                placeholder="이 책은 어땠나요?"
-                className="flex-1 bg-gray-50 border-none rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-black"
+                placeholder="이 책은 어땠나요? 감상을 남겨주세요."
+                className="flex-1 bg-transparent border-none rounded-lg px-4 py-3 text-sm focus:ring-0 outline-none"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && commentText.trim()) {
                     onAddComment(book.id, commentText);
@@ -259,7 +265,7 @@ const BookDetail = ({ book, onClose, onAddComment, comments }) => {
                     setCommentText('');
                   }
                 }}
-                className="bg-black text-white px-4 py-2 rounded-lg text-sm font-bold shrink-0"
+                className="bg-black text-white px-5 py-2 rounded-lg text-sm font-bold shrink-0 hover:bg-gray-800 transition-colors"
               >
                 등록
               </button>
@@ -291,101 +297,113 @@ const AdminMap = ({ books, onMoveBook }) => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden bg-gray-50">
-      <div className="w-full lg:w-64 bg-white border-r border-gray-200 p-4 flex flex-col h-1/3 lg:h-full overflow-hidden">
-        <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
-          <Inbox size={18}/> 미배치 도서 ({getUnplacedBooks().length})
-        </h3>
-        <p className="text-xs text-gray-500 mb-4">엑셀로 등록된 도서를 지도에 배치하세요.</p>
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden bg-gray-50/50">
+      <div className="w-full lg:w-72 bg-white border-r border-gray-200 flex flex-col h-1/3 lg:h-full overflow-hidden shadow-xl z-10">
+        <div className="p-4 border-b border-gray-100 bg-white sticky top-0">
+            <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg">
+            <Inbox size={20} className="text-blue-600"/> 미배치 도서
+            <span className="ml-auto bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">{getUnplacedBooks().length}</span>
+            </h3>
+            <p className="text-xs text-gray-500 mt-1">드래그하여 지도에 배치하세요.</p>
+        </div>
         
-        <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+        <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
           {getUnplacedBooks().map(book => (
             <div 
               key={book.id}
               draggable
               onDragStart={() => setDraggedBook(book)}
-              className="bg-white border border-gray-200 p-3 rounded-lg shadow-sm cursor-move hover:border-blue-500 hover:shadow-md transition-all flex gap-3 items-center group"
+              className="bg-white border border-gray-200 p-3 rounded-xl shadow-sm cursor-move hover:border-blue-500 hover:shadow-md hover:bg-blue-50/50 transition-all flex gap-3 items-center group active:scale-95"
             >
-              <div className="w-10 h-14 bg-gray-100 rounded shrink-0 overflow-hidden">
+              <div className="w-10 h-14 bg-gray-100 rounded shrink-0 overflow-hidden shadow-inner">
                 {book.coverUrl ? <img src={book.coverUrl} className="w-full h-full object-cover"/> : <div className="w-full h-full bg-gray-200"/>}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold truncate group-hover:text-blue-600">{book.title}</p>
-                <p className="text-xs text-gray-500 truncate">{book.locationStr ? `현위치: ${book.locationStr}` : '위치없음'}</p>
+                <p className="text-sm font-bold truncate group-hover:text-blue-700 text-gray-800">{book.title}</p>
+                <p className="text-xs text-gray-500 truncate">{book.author}</p>
               </div>
+              <div className="text-gray-300 group-hover:text-blue-400"><Move size={14}/></div>
             </div>
           ))}
           {getUnplacedBooks().length === 0 && (
-            <div className="text-center py-10 text-gray-300 text-sm">대기 중인 도서가 없습니다.</div>
+            <div className="text-center py-10 text-gray-300 text-sm flex flex-col items-center gap-2">
+                <CheckCircle size={24} className="text-green-100"/>
+                모든 도서가 배치되었습니다.
+            </div>
           )}
         </div>
       </div>
 
-      <div className="flex-1 p-4 md:p-6 overflow-auto">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">도서 위치 관리 시스템</h2>
-            <p className="text-sm text-gray-500 hidden md:block">책을 드래그하여 서가(Grid)에 배치하세요.</p>
-          </div>
-          <div className="flex bg-white rounded-lg p-1 shadow-sm border border-gray-200">
-            {sections.map(s => (
-              <button
-                key={s}
-                onClick={() => setActiveSection(s)}
-                className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${activeSection === s ? 'bg-black text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100'}`}
-              >
-                Section {s}
-              </button>
-            ))}
-          </div>
-        </div>
+      <div className="flex-1 p-4 md:p-8 overflow-auto bg-gray-50">
+        <div className="max-w-5xl mx-auto">
+            <div className="mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+                <h2 className="text-2xl font-bold text-gray-900">서가 배치도</h2>
+                <p className="text-sm text-gray-500">각 섹션(Section)을 선택하고 도서를 배치하세요.</p>
+            </div>
+            <div className="flex bg-white rounded-xl p-1.5 shadow-sm border border-gray-200">
+                {sections.map(s => (
+                <button
+                    key={s}
+                    onClick={() => setActiveSection(s)}
+                    className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${activeSection === s ? 'bg-black text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+                >
+                    Section {s}
+                </button>
+                ))}
+            </div>
+            </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
-          <div className="inline-grid gap-3" style={{ gridTemplateColumns: `repeat(${cols}, minmax(80px, 1fr))` }}>
-            {Array.from({ length: rows }).map((_, rIndex) => (
-              <React.Fragment key={rIndex}>
-                {Array.from({ length: cols }).map((_, cIndex) => {
-                  const book = getCellBook(rIndex + 1, cIndex + 1);
-                  return (
-                    <div
-                      key={`${rIndex}-${cIndex}`}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => handleDrop(rIndex + 1, cIndex + 1, e)}
-                      className={`
-                        aspect-[3/4] rounded-lg border-2 border-dashed transition-all relative group
-                        ${book ? 'border-transparent bg-white shadow-sm hover:shadow-md' : 'border-gray-200 bg-gray-50 hover:bg-gray-100'}
-                      `}
-                    >
-                      {book ? (
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 overflow-x-auto">
+            <div className="inline-grid gap-4" style={{ gridTemplateColumns: `repeat(${cols}, minmax(90px, 1fr))` }}>
+                {Array.from({ length: rows }).map((_, rIndex) => (
+                <React.Fragment key={rIndex}>
+                    {Array.from({ length: cols }).map((_, cIndex) => {
+                    const book = getCellBook(rIndex + 1, cIndex + 1);
+                    return (
                         <div
-                          draggable
-                          onDragStart={() => setDraggedBook(book)}
-                          className="w-full h-full cursor-grab active:cursor-grabbing p-1 relative"
+                        key={`${rIndex}-${cIndex}`}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => handleDrop(rIndex + 1, cIndex + 1, e)}
+                        className={`
+                            aspect-[3/4] rounded-xl border-2 transition-all relative group
+                            ${book ? 'border-transparent bg-white shadow-md hover:shadow-lg hover:-translate-y-1' : 'border-dashed border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-200'}
+                        `}
                         >
-                           {book.coverUrl ? <img 
-                            src={book.coverUrl} 
-                            className="w-full h-full object-cover rounded shadow-sm pointer-events-none" 
-                            alt="book"
-                          /> : <div className="w-full h-full bg-gray-200 rounded flex items-center justify-center text-xs text-gray-400">No Image</div>}
-                          <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors rounded"/>
-                          <div className="absolute bottom-1 left-1 right-1 bg-white/90 text-[8px] p-1 rounded text-center truncate font-bold shadow-sm">
-                            {book.title}
-                          </div>
+                        {book ? (
+                            <div
+                            draggable
+                            onDragStart={() => setDraggedBook(book)}
+                            className="w-full h-full cursor-grab active:cursor-grabbing p-1 relative"
+                            >
+                            {book.coverUrl ? <img 
+                                src={book.coverUrl} 
+                                className="w-full h-full object-cover rounded-lg pointer-events-none" 
+                                alt="book"
+                            /> : <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center text-xs text-gray-400">No Img</div>}
+                            
+                            {/* Hover Overlay */}
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center text-white p-2 text-center pointer-events-none">
+                                <div>
+                                    <p className="text-[10px] font-bold line-clamp-2">{book.title}</p>
+                                </div>
+                            </div>
+                            </div>
+                        ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
+                            <span className="text-xs font-mono font-bold">{rIndex+1}-{cIndex+1}</span>
+                            </div>
+                        )}
                         </div>
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
-                          <span className="text-[10px] font-mono">{rIndex+1}-{cIndex+1}</span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </React.Fragment>
-            ))}
-          </div>
-          <div className="mt-4 text-center border-t-2 border-gray-200 pt-2">
-            <span className="text-gray-400 font-bold uppercase tracking-widest text-xs">Section {activeSection} Floor</span>
-          </div>
+                    );
+                    })}
+                </React.Fragment>
+                ))}
+            </div>
+            <div className="mt-6 text-center pt-4 border-t border-gray-100">
+                <span className="text-gray-300 font-bold uppercase tracking-[0.3em] text-xs">Section {activeSection} Floor Plan</span>
+            </div>
+            </div>
         </div>
       </div>
     </div>
@@ -473,35 +491,37 @@ const AdminInventory = ({ orders, onBulkOrder, onReceive }) => {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="flex gap-4 mb-8 border-b border-gray-200 pb-1 items-center justify-between">
-        <div className="flex gap-4">
-            <button onClick={() => setView('bulk')} className={`pb-3 text-sm font-bold ${view === 'bulk' ? 'text-black border-b-2 border-black' : 'text-gray-400'}`}>대량 입력 (엑셀)</button>
-            <button onClick={() => setView('list')} className={`pb-3 text-sm font-bold ${view === 'list' ? 'text-black border-b-2 border-black' : 'text-gray-400'}`}>입출고 현황 ({orders.length})</button>
+    <div className="p-4 md:p-8 max-w-6xl mx-auto animate-fade-in">
+      <div className="flex flex-col md:flex-row gap-4 mb-8 border-b border-gray-200 pb-1 items-start md:items-center justify-between">
+        <div className="flex gap-6">
+            <button onClick={() => setView('bulk')} className={`pb-3 text-sm font-bold transition-all ${view === 'bulk' ? 'text-black border-b-2 border-black' : 'text-gray-400 hover:text-gray-600'}`}>대량 입력 (엑셀)</button>
+            <button onClick={() => setView('list')} className={`pb-3 text-sm font-bold transition-all ${view === 'list' ? 'text-black border-b-2 border-black' : 'text-gray-400 hover:text-gray-600'}`}>입출고 현황 ({orders.length})</button>
         </div>
-        <button onClick={downloadCSV} className="text-xs flex items-center gap-1 text-green-600 hover:text-green-800 font-bold mb-2">
-            <Download size={14}/> 회계팀 전달용 다운로드
+        <button onClick={downloadCSV} className="text-xs flex items-center gap-1.5 text-green-600 hover:text-green-800 font-bold mb-2 bg-green-50 px-3 py-1.5 rounded-lg border border-green-200 transition-colors">
+            <Download size={14}/> 엑셀로 내보내기
         </button>
       </div>
 
       {view === 'bulk' && (
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm animate-fade-in">
-          <div className="flex items-start gap-4 mb-4">
-             <div className="bg-green-100 p-2 rounded-full text-green-600"><FileText size={24}/></div>
+        <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-200 shadow-sm animate-fade-in">
+          <div className="flex items-start gap-4 mb-6">
+             <div className="bg-green-100 p-3 rounded-full text-green-600 shadow-sm"><FileText size={24}/></div>
              <div>
-                 <h3 className="font-bold text-lg">엑셀 데이터 붙여넣기</h3>
-                 <p className="text-sm text-gray-500">'판매/구입 입력' 시트의 데이터를 복사(Ctrl+C)해서 아래에 붙여넣기(Ctrl+V)하세요.</p>
-                 <p className="text-xs text-gray-400 mt-1">순서: 구분 | 일자 | ISBN | 상품명 | 수량 | 구매처 | 발주용도 | 가격</p>
+                 <h3 className="font-bold text-xl text-gray-900">엑셀 데이터 붙여넣기</h3>
+                 <p className="text-sm text-gray-500 mt-1">'판매/구입 입력' 시트의 데이터를 복사(Ctrl+C)해서 아래에 붙여넣기(Ctrl+V)하세요.</p>
+                 <div className="mt-2 text-xs bg-gray-100 text-gray-600 p-2 rounded inline-block font-mono">
+                    순서: 구분 | 일자 | ISBN | 상품명 | 수량 | 구매처 | 발주용도 | 가격
+                 </div>
              </div>
           </div>
           
           <textarea 
-            className="w-full h-64 p-4 bg-gray-50 border border-gray-200 rounded-lg text-xs font-mono focus:ring-2 focus:ring-black focus:outline-none"
-            placeholder={`예시:\n구입	2024-11-21	9788954685306	연옥당 2	1	북센	도서 추가	14700\n구입	2024-11-21	9791196155711	연의 편지	1	손봄북스	도서 추가	10500`}
+            className="w-full h-64 p-4 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all resize-none shadow-inner"
+            placeholder={`예시 데이터:\n구입	2024-11-21	9788954685306	연옥당 2	1	북센	도서 추가	14700\n구입	2024-11-21	9791196155711	연의 편지	1	손봄북스	도서 추가	10500`}
             value={pasteData}
             onChange={(e) => setPasteData(e.target.value)}
           />
-          <button onClick={handleBulkPaste} className="mt-4 w-full bg-black text-white font-bold py-3 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
+          <button onClick={handleBulkPaste} className="mt-6 w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-gray-800 transition-all flex items-center justify-center gap-2 shadow-lg">
             <Upload size={18}/> 데이터 처리 및 저장
           </button>
         </div>
@@ -510,31 +530,37 @@ const AdminInventory = ({ orders, onBulkOrder, onReceive }) => {
       {view === 'list' && (
         <div className="space-y-3 animate-fade-in">
           {[...orders].reverse().map(order => (
-            <div key={order.id} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm flex justify-between items-center">
+            <div key={order.id} className="bg-white p-4 md:p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition-shadow">
               <div>
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1.5">
                     <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${order.status === 'received' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                         {order.status === 'received' ? '입고완료' : '발주중'}
                     </span>
-                    <span className="text-xs text-gray-400">{order.date}</span>
+                    <span className="text-xs text-gray-400 flex items-center gap-1"><AlertCircle size={10}/> {order.date}</span>
                 </div>
-                <h4 className="font-bold text-gray-900">{order.title}</h4>
-                <p className="text-xs text-gray-500 font-mono mt-1">
-                    {order.isbn} | {order.quantity}권 | {order.price ? order.price.toLocaleString() : 0}원 | {order.source}
+                <h4 className="font-bold text-gray-900 text-lg">{order.title}</h4>
+                <p className="text-xs text-gray-500 font-mono mt-1 flex items-center gap-2">
+                    <span className="bg-gray-100 px-1.5 py-0.5 rounded">{order.isbn}</span>
+                    <span>{order.quantity}권</span>
+                    <span>{order.price ? order.price.toLocaleString() + '원' : '-'}</span>
+                    <span className="text-gray-400">{order.source}</span>
                 </p>
               </div>
               {order.status === 'pending' && (
                 <button 
                     onClick={() => onReceive(order)}
-                    className="bg-blue-600 text-white text-xs px-3 py-2 rounded-md font-bold hover:bg-blue-700 flex items-center gap-1"
+                    className="w-full md:w-auto bg-blue-600 text-white text-xs px-4 py-2.5 rounded-lg font-bold hover:bg-blue-700 flex items-center justify-center gap-1.5 shadow-md transition-colors"
                 >
-                    <CheckCircle size={14}/> 입고확인
+                    <CheckCircle size={14}/> 입고확인 처리
                 </button>
               )}
             </div>
           ))}
           {orders.length === 0 && (
-            <p className="text-center text-gray-400 py-10">내역이 없습니다.</p>
+            <div className="text-center py-20 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                <Package size={40} className="mx-auto text-gray-300 mb-2"/>
+                <p className="text-gray-400">등록된 내역이 없습니다.</p>
+            </div>
           )}
         </div>
       )}
@@ -589,7 +615,7 @@ const AdminDatabase = ({ books, onUpdateBook, onDeleteBook, onBulkImport }) => {
       });
       alert("✨ AI가 도서 정보를 채웠습니다!");
     } else {
-      alert("AI 생성에 실패했습니다. 다시 시도해주세요.");
+      alert("AI 생성에 실패했습니다. (API 키 확인 필요)");
     }
     setIsGenerating(false);
   };
@@ -639,106 +665,116 @@ const AdminDatabase = ({ books, onUpdateBook, onDeleteBook, onBulkImport }) => {
   };
 
   return (
-    <div className="p-4 md:p-8 animate-fade-in">
-       <div className="flex items-center justify-between mb-6">
+    <div className="p-4 md:p-8 animate-fade-in max-w-7xl mx-auto">
+       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
         <div>
-          <h2 className="text-xl font-bold">전체 도서 대장 (DB 관리)</h2>
-          <p className="text-sm text-gray-500">서점 보유 도서 전체 목록 및 ITW_GPR_BOOK 가져오기</p>
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Database className="text-blue-600"/> 전체 도서 대장</h2>
+          <p className="text-sm text-gray-500 mt-1">서점 보유 도서 전체 목록 및 ITW_GPR_BOOK 데이터 관리</p>
         </div>
         <div className="flex gap-2">
-            <button onClick={() => setShowImport(!showImport)} className="bg-black text-white px-4 py-2 rounded text-sm font-bold flex items-center gap-2">
-                <Upload size={14}/> 'ITW_GPR_BOOK' 시트 가져오기
+            <button onClick={() => setShowImport(!showImport)} className="bg-black text-white px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-gray-800 transition-colors shadow-md">
+                <Upload size={16}/> 'ITW_GPR_BOOK' 가져오기
             </button>
         </div>
        </div>
 
        {showImport && (
-           <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-               <h3 className="font-bold text-sm mb-2">데이터 붙여넣기</h3>
+           <div className="mb-8 bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-inner animate-fade-in">
+               <h3 className="font-bold text-base mb-3 flex items-center gap-2"><FileText size={18}/> 엑셀 데이터 붙여넣기</h3>
                <textarea 
-                className="w-full h-40 p-2 text-xs border rounded mb-2 font-mono"
+                className="w-full h-40 p-4 text-xs border border-gray-300 rounded-xl mb-4 font-mono focus:ring-2 focus:ring-black outline-none"
                 placeholder="ISBN	품목명	출판사	작가	새재고	DP재고	총 재고	매장/지하위치	절판유무	직전 입고 가격..."
                 value={importText}
                 onChange={e => setImportText(e.target.value)}
                />
-               <button onClick={handleImport} className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-bold">가져오기 실행</button>
+               <button onClick={handleImport} className="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors">데이터 분석 및 저장</button>
            </div>
        )}
 
-       <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-x-auto">
-         <table className="w-full text-sm text-left whitespace-nowrap">
-           <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
-             <tr>
-               <th className="px-6 py-3">ISBN</th>
-               <th className="px-6 py-3">도서명</th>
-               <th className="px-6 py-3">저자</th>
-               <th className="px-6 py-3">카테고리/태그/설명</th>
-               <th className="px-6 py-3">위치(엑셀)</th>
-               <th className="px-6 py-3">재고(DP/새)</th>
-               <th className="px-6 py-3 text-right">관리</th>
-             </tr>
-           </thead>
-           <tbody className="divide-y divide-gray-100">
-             {books.map(book => (
-               <tr key={book.id} className="hover:bg-gray-50">
-                 {editingId === book.id ? (
-                   <>
-                     <td className="px-6 py-3"><input className="border rounded px-2 py-1 w-24" value={editForm.isbn} onChange={e => setEditForm({...editForm, isbn: e.target.value})} /></td>
-                     <td className="px-6 py-3"><input className="border rounded px-2 py-1 w-full" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} /></td>
-                     <td className="px-6 py-3"><input className="border rounded px-2 py-1 w-full" value={editForm.author} onChange={e => setEditForm({...editForm, author: e.target.value})} /></td>
-                     <td className="px-6 py-3 text-xs">
-                        <input className="border rounded px-2 py-1 w-full mb-1" placeholder="카테고리" value={editForm.category} onChange={e => setEditForm({...editForm, category: e.target.value})} />
-                        <input className="border rounded px-2 py-1 w-full" placeholder="태그" value={editForm.tags} onChange={e => setEditForm({...editForm, tags: e.target.value})} />
-                     </td>
-                     <td className="px-6 py-3"><input className="border rounded px-2 py-1 w-24" value={editForm.locationStr} onChange={e => setEditForm({...editForm, locationStr: e.target.value})} /></td>
-                     <td className="px-6 py-3">
-                         <input className="border rounded px-1 py-1 w-10" value={editForm.dpStock} onChange={e => setEditForm({...editForm, dpStock: e.target.value})} /> / 
-                         <input className="border rounded px-1 py-1 w-10" value={editForm.newStock} onChange={e => setEditForm({...editForm, newStock: e.target.value})} />
-                     </td>
-                     <td className="px-6 py-3 text-right">
-                       <button onClick={saveEdit} className="text-green-600 hover:text-green-800 mr-2"><Save size={16}/></button>
-                       <button onClick={() => setEditingId(null)} className="text-gray-400 hover:text-gray-600"><XCircle size={16}/></button>
-                     </td>
-                   </>
-                 ) : (
-                   <>
-                     <td className="px-6 py-3 font-mono text-gray-500">{book.isbn}</td>
-                     <td className="px-6 py-3 font-medium text-gray-900 text-ellipsis overflow-hidden max-w-[150px]">{book.title}</td>
-                     <td className="px-6 py-3 text-gray-500 text-ellipsis overflow-hidden max-w-[80px]">{book.author}</td>
-                     <td className="px-6 py-3">
-                        <div className="flex flex-col gap-1 max-w-[200px]">
-                            <span className="text-xs bg-gray-100 w-fit px-1 rounded">{book.category}</span>
-                            <span className="text-[10px] text-gray-400 truncate">{book.tags}</span>
-                            <span className="text-[10px] text-gray-400 truncate">{book.oneLineReview}</span>
+       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+         <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left whitespace-nowrap">
+            <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
+                <tr>
+                <th className="px-6 py-4 font-bold">ISBN</th>
+                <th className="px-6 py-4 font-bold">도서명</th>
+                <th className="px-6 py-4 font-bold">저자</th>
+                <th className="px-6 py-4 font-bold">정보(카테고리/태그)</th>
+                <th className="px-6 py-4 font-bold">위치(엑셀)</th>
+                <th className="px-6 py-4 font-bold">재고(DP/새)</th>
+                <th className="px-6 py-4 text-right font-bold">관리</th>
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+                {books.map(book => (
+                <tr key={book.id} className="hover:bg-gray-50 transition-colors group">
+                    {editingId === book.id ? (
+                    <>
+                        <td className="px-6 py-3"><input className="border rounded px-2 py-1.5 w-24 bg-white focus:ring-2 focus:ring-blue-500 outline-none" value={editForm.isbn} onChange={e => setEditForm({...editForm, isbn: e.target.value})} /></td>
+                        <td className="px-6 py-3"><input className="border rounded px-2 py-1.5 w-full bg-white focus:ring-2 focus:ring-blue-500 outline-none" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} /></td>
+                        <td className="px-6 py-3"><input className="border rounded px-2 py-1.5 w-full bg-white focus:ring-2 focus:ring-blue-500 outline-none" value={editForm.author} onChange={e => setEditForm({...editForm, author: e.target.value})} /></td>
+                        <td className="px-6 py-3 text-xs space-y-1">
+                            <input className="border rounded px-2 py-1.5 w-full bg-white" placeholder="카테고리" value={editForm.category} onChange={e => setEditForm({...editForm, category: e.target.value})} />
+                            <input className="border rounded px-2 py-1.5 w-full bg-white" placeholder="태그" value={editForm.tags} onChange={e => setEditForm({...editForm, tags: e.target.value})} />
+                        </td>
+                        <td className="px-6 py-3"><input className="border rounded px-2 py-1.5 w-24 bg-white" value={editForm.locationStr} onChange={e => setEditForm({...editForm, locationStr: e.target.value})} /></td>
+                        <td className="px-6 py-3">
+                            <div className="flex items-center gap-1">
+                                <input className="border rounded px-1 py-1 w-10 text-center" value={editForm.dpStock} onChange={e => setEditForm({...editForm, dpStock: e.target.value})} />
+                                <span className="text-gray-400">/</span>
+                                <input className="border rounded px-1 py-1 w-10 text-center" value={editForm.newStock} onChange={e => setEditForm({...editForm, newStock: e.target.value})} />
+                            </div>
+                        </td>
+                        <td className="px-6 py-3 text-right">
+                        <div className="flex justify-end gap-2">
+                            <button onClick={saveEdit} className="text-green-600 bg-green-50 p-2 rounded hover:bg-green-100 transition-colors"><Save size={16}/></button>
+                            <button onClick={() => setEditingId(null)} className="text-gray-400 bg-gray-50 p-2 rounded hover:bg-gray-100 transition-colors"><XCircle size={16}/></button>
                         </div>
-                     </td>
-                     <td className="px-6 py-3 text-blue-600 font-bold">{book.locationStr || '-'}</td>
-                     <td className="px-6 py-3 text-gray-500">{book.dpStock || 0} / {book.newStock || 0}</td>
-                     <td className="px-6 py-3 text-right flex justify-end gap-2 items-center">
-                       <button 
-                        onClick={() => handleAiFill(book)} 
-                        disabled={isGenerating}
-                        className="text-purple-600 hover:text-purple-800 bg-purple-50 p-1.5 rounded-full hover:bg-purple-100 transition-colors"
-                        title="AI 정보 생성 (태그, 소개)"
-                       >
-                         {isGenerating ? <Loader2 size={16} className="animate-spin"/> : <Sparkles size={16}/>}
-                       </button>
-                       <button onClick={() => startEdit(book)} className="text-blue-600 hover:text-blue-800 p-1.5"><Edit2 size={16}/></button>
-                       <button onClick={() => { if(window.confirm('정말 삭제하시겠습니까?')) onDeleteBook(book.id); }} className="text-red-400 hover:text-red-600 p-1.5"><Trash2 size={16}/></button>
-                     </td>
-                   </>
-                 )}
-               </tr>
-             ))}
-           </tbody>
-         </table>
-         {books.length === 0 && <div className="p-8 text-center text-gray-400">데이터가 없습니다.</div>}
+                        </td>
+                    </>
+                    ) : (
+                    <>
+                        <td className="px-6 py-4 font-mono text-gray-500 text-xs">{book.isbn}</td>
+                        <td className="px-6 py-4 font-medium text-gray-900 text-ellipsis overflow-hidden max-w-[200px]">{book.title}</td>
+                        <td className="px-6 py-4 text-gray-500 text-ellipsis overflow-hidden max-w-[100px] text-xs">{book.author}</td>
+                        <td className="px-6 py-4">
+                            <div className="flex flex-col gap-1.5 max-w-[200px]">
+                                <span className="text-[10px] font-bold bg-blue-50 text-blue-600 w-fit px-2 py-0.5 rounded-full">{book.category}</span>
+                                <span className="text-[10px] text-gray-400 truncate">{book.tags}</span>
+                            </div>
+                        </td>
+                        <td className="px-6 py-4 text-gray-700 font-bold text-xs">{book.locationStr || '-'}</td>
+                        <td className="px-6 py-4 text-gray-500 font-mono text-xs">
+                            <span className="font-bold text-black">{book.dpStock || 0}</span> / {book.newStock || 0}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                                onClick={() => handleAiFill(book)} 
+                                disabled={isGenerating}
+                                className="text-purple-600 hover:text-purple-800 bg-purple-50 p-2 rounded-lg hover:bg-purple-100 transition-colors"
+                                title="AI 정보 생성 (태그, 소개)"
+                            >
+                                {isGenerating ? <Loader2 size={16} className="animate-spin"/> : <Sparkles size={16}/>}
+                            </button>
+                            <button onClick={() => startEdit(book)} className="text-blue-600 hover:text-blue-800 bg-blue-50 p-2 rounded-lg hover:bg-blue-100 transition-colors"><Edit2 size={16}/></button>
+                            <button onClick={() => { if(window.confirm('정말 삭제하시겠습니까?')) onDeleteBook(book.id); }} className="text-red-400 hover:text-red-600 bg-red-50 p-2 rounded-lg hover:bg-red-100 transition-colors"><Trash2 size={16}/></button>
+                        </div>
+                        </td>
+                    </>
+                    )}
+                </tr>
+                ))}
+            </tbody>
+            </table>
+         </div>
+         {books.length === 0 && <div className="p-12 text-center text-gray-400">데이터가 없습니다.</div>}
        </div>
     </div>
   )
 }
 
-// 7. AI Curation Component
+// 7. NEW: AI Curation Component
 const AiCuration = ({ books, onClickBook }) => {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -749,13 +785,12 @@ const AiCuration = ({ books, onClickBook }) => {
     setLoading(true);
     setRecommendations([]);
 
-    // Context Optimization
     const bookListContext = books.slice(0, 100).map(b => `${b.id}: ${b.title} (${b.author})`).join('\n');
     
     const prompt = `
       사용자 질문: "${query}"
       
-      아래는 도서관이 보유한 책 목록이야 (일부):
+      아래는 도서관이 보유한 책 목록이야:
       ${bookListContext}
       
       이 목록 중에서 사용자의 질문이나 기분에 가장 잘 어울리는 책 3권을 골라줘.
@@ -776,39 +811,42 @@ const AiCuration = ({ books, onClickBook }) => {
       }).filter(Boolean);
       setRecommendations(recs);
     } else {
-      alert("적절한 추천을 찾지 못했어요. 질문을 조금 더 구체적으로 해주세요!");
+      alert("적절한 추천을 찾지 못했어요. API 키를 확인해주세요!");
     }
     setLoading(false);
   };
 
   return (
-    <div className="p-4 md:p-8 animate-fade-in">
-        <h2 className="text-3xl font-bold font-serif mb-2 flex items-center gap-2">
-            <Sparkles className="text-yellow-500" /> AI 사서의 맞춤 추천
-        </h2>
-        <p className="text-gray-500 mb-8">기분이나 상황을 말씀해주시면, 서가에 있는 책 중에서 골라드릴게요.</p>
+    <div className="p-4 md:p-8 animate-fade-in max-w-6xl mx-auto">
+        <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold font-serif mb-4 flex items-center justify-center gap-3">
+                <Sparkles className="text-yellow-400 fill-yellow-400" size={32} /> AI 사서의 맞춤 추천
+            </h2>
+            <p className="text-gray-500 text-lg">당신의 기분이나 상황을 말씀해주시면, 서가에 있는 책 중에서 골라드릴게요.</p>
+        </div>
 
-        <div className="max-w-2xl mx-auto mb-12">
-            <div className="flex gap-2 relative">
+        <div className="max-w-2xl mx-auto mb-16 relative">
+            <div className="flex gap-2 relative group">
                 <input 
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleRecommend()}
-                    placeholder="예: 우울할 때 읽기 좋은 따뜻한 소설 추천해줘"
-                    className="w-full pl-6 pr-14 py-4 rounded-full bg-gray-100 border-2 border-transparent focus:border-black focus:bg-white transition-all text-lg shadow-sm"
+                    placeholder="예: 우울할 때 읽기 좋은 따뜻한 소설 추천해줘, 혹은 여행 가고 싶어"
+                    className="w-full pl-8 pr-16 py-5 rounded-full bg-white border-2 border-gray-100 focus:border-black focus:shadow-lg transition-all text-lg outline-none placeholder:text-gray-400"
                 />
                 <button 
                     onClick={handleRecommend}
                     disabled={loading}
-                    className="absolute right-2 top-2 bottom-2 bg-black text-white px-6 rounded-full font-bold hover:scale-105 transition-transform disabled:opacity-50 disabled:scale-100 flex items-center"
+                    className="absolute right-2 top-2 bottom-2 bg-black text-white px-6 rounded-full font-bold hover:scale-105 transition-transform disabled:opacity-50 disabled:scale-100 flex items-center justify-center aspect-square"
                 >
-                    {loading ? <Loader2 className="animate-spin"/> : <ArrowRight />}
+                    {loading ? <Loader2 className="animate-spin"/> : <ArrowRight size={24}/>}
                 </button>
             </div>
             
-            <div className="flex gap-2 mt-4 justify-center flex-wrap">
+            {/* Quick Chips */}
+            <div className="flex gap-3 mt-6 justify-center flex-wrap">
                 {['마음이 복잡할 때', '여름 휴가에 가져갈 책', '추리 소설 추천해줘', '성공하고 싶어'].map(q => (
-                    <button key={q} onClick={() => { setQuery(q); }} className="text-xs bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200 transition-colors">
+                    <button key={q} onClick={() => { setQuery(q); }} className="text-sm bg-gray-50 hover:bg-gray-100 px-4 py-2 rounded-full border border-gray-200 transition-colors text-gray-600 hover:text-black hover:border-gray-300">
                         {q}
                     </button>
                 ))}
@@ -817,10 +855,14 @@ const AiCuration = ({ books, onClickBook }) => {
 
         {recommendations.length > 0 && (
             <div className="animate-fade-in">
-                <h3 className="font-bold text-lg mb-6 text-center">사서의 추천 리스트</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <h3 className="font-bold text-xl mb-8 text-center flex items-center justify-center gap-2">
+                    <span className="w-8 h-[1px] bg-gray-300"></span>
+                    사서의 추천 리스트
+                    <span className="w-8 h-[1px] bg-gray-300"></span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {recommendations.map(book => (
-                        <div key={book.id} className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div key={book.id} className="bg-white p-5 rounded-2xl border border-blue-100 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
                             <BookCard book={book} onClick={onClickBook} reason={book.reason} />
                         </div>
                     ))}
@@ -945,7 +987,10 @@ export default function LibraryApp() {
 
   // Loading State
   if (!isFirebaseReady && !user) {
-      return <div className="h-screen flex items-center justify-center text-gray-400">Loading...</div>
+      return <div className="h-screen flex items-center justify-center text-gray-400 flex-col gap-4">
+        <Loader2 className="animate-spin text-black" size={32}/>
+        <p className="text-sm">도서관 문을 열고 있습니다...</p>
+      </div>
   }
 
   return (
@@ -953,31 +998,39 @@ export default function LibraryApp() {
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} userMode={userMode} setUserMode={setUserMode} />
       <main className="max-w-screen-xl mx-auto min-h-[calc(100vh-60px)]">
         {activeTab === 'home' && (
-          <div className="p-4 md:p-8 space-y-12 animate-fade-in">
-            <section className="text-center py-12 bg-gray-50 rounded-3xl">
-              <h1 className="text-3xl md:text-5xl font-bold mb-4 font-serif">오늘의 발견, <br/>당신의 서재</h1>
-              <p className="text-gray-500 mb-8">취향에 맞는 책을 찾아보고 서가 위치를 확인하세요.</p>
-              <button onClick={() => setActiveTab('search')} className="bg-black text-white px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">
+          <div className="p-4 md:p-8 space-y-16 animate-fade-in">
+            <section className="text-center py-20 bg-gradient-to-b from-gray-50 to-white rounded-[3rem]">
+              <h1 className="text-4xl md:text-6xl font-bold mb-6 font-serif tracking-tight">오늘의 발견, <br/><span className="text-blue-600">당신의 서재</span></h1>
+              <p className="text-gray-500 mb-10 text-lg">취향에 맞는 책을 찾아보고 서가 위치를 확인하세요.</p>
+              <button onClick={() => setActiveTab('search')} className="bg-black text-white px-10 py-4 rounded-full font-bold hover:scale-105 transition-transform hover:shadow-lg text-lg">
                 도서 검색하기
               </button>
             </section>
             <section>
-              <h2 className="text-2xl font-bold font-serif mb-6">오늘의 신간</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-8">
+              <div className="flex items-end justify-between mb-8 px-2">
+                <h2 className="text-2xl md:text-3xl font-bold font-serif">오늘의 신간</h2>
+                <span className="text-sm text-gray-400 hover:text-black cursor-pointer underline underline-offset-4">전체보기</span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-6 gap-y-12">
                 {books.filter(b => b.isNew).slice(0, 12).map(book => <BookCard key={book.id} book={book} onClick={setSelectedBook} />)}
+                {books.length === 0 && <div className="col-span-full py-20 text-center text-gray-300">등록된 도서가 없습니다.</div>}
               </div>
             </section>
           </div>
         )}
         {activeTab === 'search' && (
           <div className="p-4 md:p-8 animate-fade-in">
-            <div className="relative max-w-2xl mx-auto mb-10">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20}/>
-              <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="검색어를 입력하세요..." className="w-full pl-12 pr-4 py-4 rounded-full bg-gray-100 border-none focus:ring-2 focus:ring-black text-lg" autoFocus/>
+            <div className="relative max-w-2xl mx-auto mb-16 mt-8">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400" size={24}/>
+              <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="검색어를 입력하세요 (제목, 저자)" className="w-full pl-16 pr-6 py-5 rounded-full bg-gray-50 border-2 border-transparent focus:bg-white focus:border-black transition-all text-xl shadow-sm outline-none" autoFocus/>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
+            {searchTerm && <p className="mb-6 text-gray-500 font-bold px-2">'{searchTerm}' 검색 결과 ({filteredBooks.length})</p>}
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-12">
               {filteredBooks.map(book => <BookCard key={book.id} book={book} onClick={setSelectedBook} />)}
             </div>
+            {filteredBooks.length === 0 && searchTerm && (
+                <div className="text-center py-20 text-gray-400">검색 결과가 없습니다.</div>
+            )}
           </div>
         )}
         {activeTab === 'curation' && (
@@ -990,9 +1043,13 @@ export default function LibraryApp() {
       {selectedBook && <BookDetail book={selectedBook} comments={comments.filter(c => c.bookId === selectedBook.id)} onClose={() => setSelectedBook(null)} onAddComment={handleAddComment} />}
       <style>{`
         @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+        .animate-fade-in { animation: fade-in 0.4s ease-out forwards; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
       `}</style>
     </div>
   );
